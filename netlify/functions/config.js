@@ -1,6 +1,6 @@
 // netlify/functions/config.js
 
-exports.handler = async function(event, context) {
+export async function handler(event, context) {
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -11,8 +11,9 @@ exports.handler = async function(event, context) {
           storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
           messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
           appId: process.env.FIREBASE_APP_ID,
+          measurementId: process.env.FIREBASE_MEASUREMENT_ID
         }
       })
     };
-  };
+  }
   
