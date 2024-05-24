@@ -4,7 +4,7 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+        navigator.serviceWorker.register('/src/service-worker.js').then(function(registration) {
             console.log('Service Worker registered with scope: ', registration.scope);
         }, function(error) {
             console.log('Service Worker registration failed:', error);
@@ -21,6 +21,9 @@ document.querySelectorAll('.progress-bar').forEach(bar => {
 
 async function getConfig() {
     const response = await fetch('/.netlify/functions/config');
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const config = await response.json();
     return config.firebaseConfig;
 }

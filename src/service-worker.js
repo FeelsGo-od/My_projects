@@ -2,11 +2,10 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open('static-cache').then(cache => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/styles.css',
-        '/src/index.js',
-        '/manifest.json'
+        '../index.html',
+        '../styles.css',
+        '../src/index.js',
+        '../manifest.json'
       ]);
     })
   );
