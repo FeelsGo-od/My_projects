@@ -15,8 +15,12 @@ if ('serviceWorker' in navigator) {
 document.querySelectorAll('.progress-bar').forEach(bar => {
     bar.addEventListener('input', function() {
         const percentage = document.getElementById(`percentage-${this.id.split('-')[2]}`);
-        percentage.textContent = `${this.value}%`;
-        saveProgress(currentUser.uid, { [this.id]: this.value });
+        if (percentage) {
+            percentage.textContent = `${this.value}%`;
+            percentage.style.width = `${this.value}%`;
+        } else {
+            console.error('Element not found:', `percentage-${this.id.split('-')[2]}`)
+        }
     });
 });
 
@@ -31,31 +35,6 @@ async function getConfig() {
 
 let currentUser = null;
 
-async function saveProgress(uid, progressData) {
-    try {
-        const userDoc = doc(getFirestore(), 'users', uid);
-        const existingData = (await getDoc(userDoc)).data() || {};
-        await setDoc(userDoc, { ...existingData, ...progressData });
-    } catch (e) {
-        console.error('Error adding document: ', e);
-    }
-}
-
-async function loadProgress(uid) {
-    try {
-        const docSnap = await getDoc(doc(getFirestore(), 'users', uid));
-        if (docSnap.exists()) {
-            return docSnap.data()
-        } else {
-            console.log('No progress data found.');
-            return null;
-        }
-    } catch (e) {
-        console.error('Error loading progress: ', e);
-        return null;
-    }
-}
-
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
     if (firebaseConfig) {
@@ -64,84 +43,80 @@ getConfig().then(firebaseConfig => {
         const provider = new GoogleAuthProvider();
         const db = getFirestore(app);
 
+        async function saveProgress(uid, progressData) {
+            try {
+                await setDoc(doc(db, 'users', uid), { progressData });
+            } catch (e) {
+                console.error('Error adding document: ', e);
+            }
+        }
+
+        async function loadProgress(uid) {
+            try {
+                const docRef = doc(db, 'users', uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    return docSnap.data().progressData;
+                } else {
+                    console.log('No progress data found.');
+                    return null;
+                }
+            } catch (e) {
+                console.error('Error loading progress: ', e);
+                return null;
+            }
+        }
+
         document.getElementById('login-btn').addEventListener('click', () => {
             signInWithPopup(auth, provider).then(result => {
                 const credential = GoogleAuthProvider.credentialFromResult(result);
                 const token = credential.accessToken;
-
                 const user = result.user;
                 console.log('User signed in: ', user);
                 currentUser = result.user;
             }).catch(error => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                const email = error.customData.email;
-                const credential = GoogleAuthProvider.credentialFromError(error);
-                console.error('Error during sign in: ', error)
+                if (error.code === 'auth/popup-closed-by-user') {
+                    console.error('Error during sign in: Popup closed by user');
+                } else {
+                    console.error('Error during sign in: ', error)
+                }
             });
+        });
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                // user is signed in
+                loadProgress(user.uid).then(progressData => {
+                    if (progressData) {
+                        console.log(progressData);
+                        // Update the UI with loaded progress data
+                        progressData.forEach((value, index) => {
+                            const progressBar = document.getElementById(`progress-bar-${index + 1}`);
+                            const percentage = document.getElementById(`percentage-${index + 1}`);
+                            if (progressBar && percentage) {
+                                progressBar.value = value;
+                                percentage.textContent = `${value}%`;
+                                percentage.style.width = `${value}%`;
+                            }
+                        });
+                    }
+                })
+            } else {
+                document.querySelectorAll('.progress-bar').forEach(bar => bar.style.display = 'none');
+            }
         });
 
         document.getElementById('logout-btn').addEventListener('click', () => {
             signOut(auth).then(() => {
                 // user signed out
                 console.log('User signed out.');
-                currentUser = null;
-                document.getElementById('logout-btn').style.display = 'none';
-                document.getElementById('progress-container').style.display = 'none';
-                document.getElementById('login-btn').style.display = 'block';
+                document.querySelectorAll('.progress-bar').forEach(bar => bar.style.display = 'none');
             }).catch(error => {
                 // handle errors
                 console.error('Error during sign out: ', error);
             });
         });
-
-        onAuthStateChanged(auth, async user => {
-            if (user) {
-                // user is signed in
-                console.log('User is signed in: ', user);
-                currentUser = user;
-                document.getElementById('login-btn').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'block';
-                document.getElementById('progress-container').style.display = 'block';
-                
-                const progressData = await loadProgress(user.uid);
-                if (progressData) {
-                    for (const [key, value] of Object.entries(progressData)) {
-                        const progressBar = document.getElementById(key);
-                        if (progressBar) {
-                            progressBar.value = value;
-                            const percentage = document.getElementById(`percentage-${key.split('-')[2]}`);
-                            if (percentage) {
-                                percentage.textContent = `${value}%`;
-                            }
-                        }
-                    }
-                }
-
-                loadProgress(user.uid).then(progressData => {
-                    console.log(progressData);
-                });
-            } else {
-                // no user is signed in
-                console.log('No user is signed in.');
-                currentUser = null;
-                document.getElementById('login-btn').style.display = 'block';
-                document.getElementById('logout-btn').style.display = 'none';
-                document.getElementById('progress-container').style.display = 'none'
-            }
-        });
-
-        async function loadProgress(uid) {
-            const docRef = doc(db, 'users', uid);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                return docSnap.data().progressData;
-            } else {
-                console.log('No such document!');
-                return null;
-            }
-        }
     }
 }).catch(error => {
     console.error('Error fetching Firebase config: ', error);
