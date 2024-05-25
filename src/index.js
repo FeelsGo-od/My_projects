@@ -30,61 +30,71 @@ async function getConfig() {
 
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    const db = getFirestore(app);
+    if (firebaseConfig) {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const db = getFirestore(app);
 
-    async function saveProgress(uid, progressData) {
-        try {
-            await setDoc(doc(db, 'users', uid), { progressData });
-        } catch (e) {
-            console.error('Error adding document: ', e);
-        }
-    }
+        document.getElementById('login-btn').addEventListener('click', () => {
+            signInWithPopup(auth, provider).then(result => {
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
 
-    async function loadProgress(uid) {
-        const docRef = doc(db, 'users', uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-            return docSnap.data().progressData;
-        } else {
-            console.log('No such document!');
-            return null;
-        }
-    }
-
-    document.getElementById('login-btn').addEventListener('click', () => {
-        signInWithPopup(auth, provider).then(result => {
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-            const token = credential.accessToken;
-
-            const user = result.user;
-        }).catch(error => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            const email = error.customData.email;
-            const credential = GoogleAuthProvider.credentialFromError(error);
-        });
-    });
-
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            // user is signed in
-            loadProgress(user.uid).then(progressData => {
-                console.log(progressData);
+                const user = result.user;
+                console.log('User signed in: ', user);
+            }).catch(error => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                const email = error.customData.email;
+                const credential = GoogleAuthProvider.credentialFromError(error);
+                console.error('Error during sign in: ', error)
             });
-        } else {
-            // no user is signed in
-        }
-    });
-
-    document.getElementById('logout-btn').addEventListener('click', () => {
-        signOut(auth).then(() => {
-            // user signed out
-        }).catch(error => {
-            // handle errors
         });
-    });
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                // user is signed in
+                console.log('User is signed in: ', user);
+                loadProgress(user.uid).then(progressData => {
+                    console.log(progressData);
+                });
+            } else {
+                // no user is signed in
+                console.log('No user is signed in.');
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                // user signed out
+                console.log('User signed out.');
+            }).catch(error => {
+                // handle errors
+                console.error('Error during sign out: ', error);
+            });
+        });
+
+        async function saveProgress(uid, progressData) {
+            try {
+                await setDoc(doc(db, 'users', uid), { progressData });
+            } catch (e) {
+                console.error('Error adding document: ', e);
+            }
+        }
+
+        async function loadProgress(uid) {
+            const docRef = doc(db, 'users', uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return docSnap.data().progressData;
+            } else {
+                console.log('No such document!');
+                return null;
+            }
+        }
+    }
+}).catch(error => {
+    console.error('Error fetching Firebase config: ', error);
 });
