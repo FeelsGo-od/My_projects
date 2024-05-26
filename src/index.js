@@ -63,6 +63,7 @@ getConfig().then(firebaseConfig => {
                 // user is signed in
                 document.getElementById('login-btn').style.display = 'none';
                 document.getElementById('logout-btn').style.display = 'block';
+                document.getElementById('progress-bar-container').style.display = 'block';
 
                 loadProgress(user.uid).then(progressData => {
                     if (progressData) {
