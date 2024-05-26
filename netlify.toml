@@ -5,28 +5,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cross-Origin-Opener-Policy = "same-origin"
-
-[[headers]]
-  for = "/service-worker.js"
-  [headers.values]
-    Cross-Origin-Resource-Policy = "same-site"
-
-[[headers]]
-  for = "/src/index.js"
-  [headers.values]
-    Cross-Origin-Resource-Policy = "same-site"
-
-[[headers]]
-  for = "/styles.css"
-  [headers.values]
-    Cross-Origin-Resource-Policy = "same-site"
-
-[[headers]]
-  for = "/manifest.json"
-  [headers.values]
-    Cross-Origin-Resource-Policy = "same-site"
