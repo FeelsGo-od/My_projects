@@ -13,16 +13,22 @@
     Cross-Origin-Embedder-Policy = "require-corp"
 
 [[headers]]
-  for = "/service-worker.js"
+  for = "src/service-worker.js"
   [headers.values]
     Cross-Origin-Resource-Policy = "same-site"
 
 [[headers]]
-  for = "/index.js"
+  for = "/src/index.js"
   [headers.values]
     Cross-Origin-Resource-Policy = "same-site"
 
 [[headers]]
   for = "/styles.css"
+  [headers.values]
+    Cross-Origin-Resource-Policy = "same-site"
+
+
+[[headers]]
+  for = "/manifest.json"
   [headers.values]
     Cross-Origin-Resource-Policy = "same-site"
