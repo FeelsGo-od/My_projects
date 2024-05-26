@@ -11,3 +11,18 @@
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Embedder-Policy = "require-corp"
+
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Cross-Origin-Resource-Policy = "same-site"
+
+[[headers]]
+  for = "/index.js"
+  [headers.values]
+    Cross-Origin-Resource-Policy = "same-site"
+
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cross-Origin-Resource-Policy = "same-site"
