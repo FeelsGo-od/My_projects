@@ -49,8 +49,8 @@ getConfig().then(firebaseConfig => {
             signOut(auth).then(() => {
                 // user signed out
                 console.log('User signed out.');
-                document.getElementById('login-btn').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'block';
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'none';
                 document.querySelectorAll('.progress-bar').forEach(bar => bar.style.display = 'none');
             }).catch(error => {
                 // handle errors
