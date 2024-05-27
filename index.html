@@ -6,19 +6,38 @@
     <title>Your Sliding Progress Bar</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <div id="app">
-
-        <button id="login-btn">Login with Google</button>
-        <button id="logout-btn" style="display: none;">Logout</button>
-
-        <div class="progress-bar-container" style="display: none;">
-            <input type="range" min="0" max="100" value="50" class="progress-bar" id="progress-bar-1">
-            <span id="percentage-1">50%</span>
+    <header class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Progress App</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <button id="login-btn" class="btn btn-primary">Login with Google</button>
+                </li>
+                <li class="nav-item">
+                    <button id="logout-btn" class="btn btn-secondary" style="display: none;">Logout</button>
+                </li>
+            </ul>
         </div>
+    </header>
+    <main class="container mt-5">
+        <div class="progress-bar-container" style="display: none;">
+            <div class="form-group">
+                <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range" id="progress-bar-1">
+                <div class="d-flex justify-content-between">
+                    <label for="progress-bar-1">Progress</label>
+                    <span id="percentage-1">50%</span>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="text-center mt-5">
+        <p>&copy; 2023 Your App. All rights reserved.</p>
+    </footer>
 
-    </div>
     <script type="module" src="src/index.js"></script>
 </body>
 </html>

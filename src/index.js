@@ -84,7 +84,10 @@ getConfig().then(firebaseConfig => {
                 } else {
                     sessionStorage.removeItem('user')
                     console.log('No user is signed in');
-                    hideProgressBars();            }
+                    document.getElementById('login-btn').style.display = 'block';
+                    document.getElementById('logout-btn').style.display = 'none';
+                    hideProgressBars();            
+                }
             });
 
             async function saveProgress(uid, progressData) {
