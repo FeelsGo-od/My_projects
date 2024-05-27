@@ -77,7 +77,7 @@ getConfig().then(firebaseConfig => {
                     loadProgress(user.uid).then(progressData => {
                         if (progressData) {
                             console.log(progressData);
-                            document.getElementById('progress-bar-container').style.display = 'block';
+                            document.getElementsByClassName('progress-bar-container')[0].style.display = 'block'
                             updateProgressBars(progressData);
                         }
                     })
