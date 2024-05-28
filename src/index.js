@@ -75,6 +75,7 @@ getConfig().then(firebaseConfig => {
             });
 
             document.getElementById('logout-btn').addEventListener('click', () => {
+                showSpinner();
                 signOut(auth).then(() => {
                     // user signed out
                     console.log('User signed out.');
@@ -82,6 +83,8 @@ getConfig().then(firebaseConfig => {
                 }).catch(error => {
                     // handle errors
                     console.error('Error during sign out: ', error);
+                }).finally(() => {
+                    hideSpinner();
                 });
             });
 
@@ -131,6 +134,8 @@ getConfig().then(firebaseConfig => {
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
+                } finally {
+                    hideSpinner();
                 }
             }
 
