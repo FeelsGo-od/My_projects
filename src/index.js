@@ -31,17 +31,13 @@ function hideSpinner() {
 }
 
 function hideProgressBars() {
-    document.querySelectorAll('.progress-bar').forEach(bar => {
-        bar.style.display = 'none';
-    });
+    document.querySelector('.progress-bar-container').style.display = 'none';
     document.getElementById('login-btn').style.display = 'inline-block';
     document.getElementById('logout-btn').style.display = 'none';
 }
 
 function showProgressBars() {
-    document.querySelectorAll('.progress-bar-container').forEach(container => {
-        container.style.display = 'block';
-    })
+    document.querySelector('.progress-bar-container').style.display = 'block';
     document.getElementById('login-btn').style.display = 'none';
     document.getElementById('logout-btn').style.display = 'inline-block';
 }
@@ -135,8 +131,6 @@ getConfig().then(firebaseConfig => {
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
-                } finally {
-                    hideSpinner();
                 }
             }
 
