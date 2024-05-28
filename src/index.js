@@ -22,7 +22,13 @@ async function getConfig() {
     return config.firebaseConfig;
 }
 
-// let currentUser = null;
+function showSpinner() {
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+    document.getElementById('loading-spinner').style.display = 'none';
+}
 
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
@@ -39,6 +45,7 @@ getConfig().then(firebaseConfig => {
 
         auth.setPersistence(browserLocalPersistence).then(() => {
             document.getElementById('login-btn').addEventListener('click', () => {
+                showSpinner();
                 signInWithPopup(auth, provider).then(result => {
                     const credential = GoogleAuthProvider.credentialFromResult(result);
                     const token = credential.accessToken;
@@ -49,6 +56,8 @@ getConfig().then(firebaseConfig => {
                     if (error.code === 'auth/popup-closed-by-user') {
                         alert('Authentication popup was closed before sign in was completed. Please try again.');
                     }
+                }).finally(() => {
+                    hideSpinner();
                 });
             });
 
@@ -80,13 +89,16 @@ getConfig().then(firebaseConfig => {
                             document.getElementsByClassName('progress-bar-container')[0].style.display = 'block'
                             updateProgressBars(progressData);
                         }
+                    }).finally(() => {
+                        hideSpinner();
                     })
                 } else {
                     sessionStorage.removeItem('user')
                     console.log('No user is signed in');
                     document.getElementById('login-btn').style.display = 'block';
                     document.getElementById('logout-btn').style.display = 'none';
-                    hideProgressBars();            
+                    hideProgressBars();
+                    hideSpinner();            
                 }
             });
 
@@ -99,6 +111,7 @@ getConfig().then(firebaseConfig => {
             }
 
             async function loadProgress(uid) {
+                showSpinner();
                 try {
                     const docRef = doc(db, 'users', uid);
                     const docSnap = await getDoc(docRef);
@@ -112,6 +125,8 @@ getConfig().then(firebaseConfig => {
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
+                } finally {
+                    hideSpinner();
                 }
             }
 
