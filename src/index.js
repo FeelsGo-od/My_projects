@@ -30,6 +30,22 @@ function hideSpinner() {
     document.getElementById('loading-spinner').style.display = 'none';
 }
 
+function hideProgressBars() {
+    document.querySelectorAll('.progress-bar').forEach(bar => {
+        bar.style.display = 'none';
+    });
+    document.getElementById('login-btn').style.display = 'inline-block';
+    document.getElementById('logout-btn').style.display = 'none';
+}
+
+function showProgressBars() {
+    document.querySelectorAll('.progress-bar-container').forEach(container => {
+        container.style.display = 'block';
+    })
+    document.getElementById('login-btn').style.display = 'none';
+    document.getElementById('logout-btn').style.display = 'inline-block';
+}
+
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
     if (firebaseConfig) {
@@ -65,9 +81,7 @@ getConfig().then(firebaseConfig => {
                 signOut(auth).then(() => {
                     // user signed out
                     console.log('User signed out.');
-                    document.getElementById('login-btn').style.display = 'block';
-                    document.getElementById('logout-btn').style.display = 'none';
-                    document.querySelectorAll('.progress-bar').forEach(bar => bar.style.display = 'none');
+                    hideProgressBars();
                 }).catch(error => {
                     // handle errors
                     console.error('Error during sign out: ', error);
@@ -75,19 +89,16 @@ getConfig().then(firebaseConfig => {
             });
 
             onAuthStateChanged(auth, user => {
+                showSpinner();
                 if (user) {
                     // user is signed in
-                    document.getElementById('login-btn').style.display = 'none';
-                    document.getElementById('logout-btn').style.display = 'block';
-                    document.getElementsByClassName('progress-bar-container')[0].style.display = 'block'
-    
                     sessionStorage.setItem('user', JSON.stringify(user));
     
                     loadProgress(user.uid).then(progressData => {
                         if (progressData) {
                             console.log(progressData);
-                            document.getElementsByClassName('progress-bar-container')[0].style.display = 'block'
                             updateProgressBars(progressData);
+                            showProgressBars();
                         }
                     }).finally(() => {
                         hideSpinner();
@@ -95,8 +106,6 @@ getConfig().then(firebaseConfig => {
                 } else {
                     sessionStorage.removeItem('user')
                     console.log('No user is signed in');
-                    document.getElementById('login-btn').style.display = 'block';
-                    document.getElementById('logout-btn').style.display = 'none';
                     hideProgressBars();
                     hideSpinner();            
                 }
@@ -125,8 +134,6 @@ getConfig().then(firebaseConfig => {
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
-                } finally {
-                    hideSpinner();
                 }
             }
 
@@ -139,12 +146,6 @@ getConfig().then(firebaseConfig => {
                         percentage.textContent = `${value}%`;
                         percentage.style.width = `${value}%`;
                     }
-                });
-            }
-    
-            function hideProgressBars() {
-                document.querySelectorAll('.progress-bar').forEach(bar => {
-                    bar.style.display = 'none';
                 });
             }
 
