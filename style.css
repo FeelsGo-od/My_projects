@@ -41,7 +41,7 @@ main {
 
 .progress-bar-container {
     margin: 20px 0;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
 }

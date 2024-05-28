@@ -67,6 +67,7 @@ getConfig().then(firebaseConfig => {
                     const token = credential.accessToken;
                     const user = result.user;
                     console.log('User signed in: ', user);
+                    showProgressBars();
                 }).catch(error => {
                     console.error('Error during sign in:', error);
                     if (error.code === 'auth/popup-closed-by-user') {
@@ -134,6 +135,8 @@ getConfig().then(firebaseConfig => {
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
+                } finally {
+                    hideSpinner();
                 }
             }
 
