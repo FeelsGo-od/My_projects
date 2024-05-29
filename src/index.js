@@ -208,11 +208,13 @@ getConfig().then(firebaseConfig => {
             async function saveProgress(uid, newProgressBar) {
                 try {
                     // Add a new document to the "progressBars" collection
-                    await addDoc(collection(db, 'progressBars'), {
-                        uid: uid,
-                        title: newProgressBar.title,
-                        percentage: newProgressBar.percentage
-                    });
+                    await Promise.all(newProgressBar.map(async (bar) => {
+                        await addDoc(collection(db, 'progressBars'), {
+                            uid: uid,
+                            title: bar.title,
+                            percentage: bar.percentage
+                        });
+                    }));
                 } catch (e) {
                     console.error('Error adding document: ', e);
                 }
