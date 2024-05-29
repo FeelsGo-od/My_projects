@@ -230,17 +230,20 @@ getConfig().then(firebaseConfig => {
             function updateProgressBars(progressData) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
                 const noProgressText = document.getElementById('no-progress-text');
-
-                progressBarsContainer.innerHTML = ''; // Clear existing progress bars
-
+            
+                // Clear any existing progress bars
+                progressBarsContainer.innerHTML = '';
+            
                 if (progressData.length > 0) {
                     progressData.forEach(value => {
                         createProgressBar(value.title, value.id, value.percentage);
                     });
-
+            
+                    // Show progress bars container and hide placeholder text
                     progressBarsContainer.style.display = 'block';
                     noProgressText.style.display = 'none';
                 } else {
+                    // Hide progress bars container and show placeholder text
                     progressBarsContainer.style.display = 'none';
                     noProgressText.style.display = 'block';
                 }
