@@ -38,6 +38,9 @@ function hideProgressBars() {
 
 function showProgressBars() {
     document.querySelector('.progress-bar-container').style.display = 'block';
+    if (progressBarContainer) {
+        progressBarContainer.style.display = 'block';
+    }
     document.getElementById('login-btn').style.display = 'none';
     document.getElementById('logout-btn').style.display = 'inline-block';
 }
