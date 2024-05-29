@@ -54,6 +54,7 @@ function createProgressBar(title) {
     // Create HTML elements for the new progress bar
     const progressBarHTML = `
     <div class="progress-bar-container">
+    <h3 class="progress-title">${title}</h3>
         <div class="form-group">
             <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
             <div class="d-flex justify-content-between">
@@ -72,16 +73,16 @@ function createProgressBar(title) {
     newProgressBar.style.display = 'block';
 
     // Add event listener to the label to make it editable
-    const label = newProgressBar.querySelector('.progress-label');
-    label.addEventListener('click', () => {
+    const titleElement = newProgressBar.querySelector('.progress-title');
+    titleElement.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'text';
-        input.value = label.textContent;
+        input.value = titleElement.textContent;
         input.addEventListener('blur', () => {
-            label.textContent = input.value;
+            titleElement.textContent = input.value;
         });
-        label.textContent = '';
-        label.appendChild(input);
+        titleElement.textContent = '';
+        titleElement.appendChild(input);
         input.focus();
     });
 }
