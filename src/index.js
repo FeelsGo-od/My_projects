@@ -99,7 +99,7 @@ getConfig().then(firebaseConfig => {
                             console.log(progressData);
                             updateProgressBars(progressData);
                             progressData.forEach(data => {
-                                createProgressBar(data.title, data.id, progressData); // Call createProgressBar for each progress bar
+                                createProgressBar(data.title, data.id); // Call createProgressBar for each progress bar
                             });
                             showProgressBars();
                         } else {
@@ -172,7 +172,7 @@ getConfig().then(firebaseConfig => {
                 const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
                 deleteButton.addEventListener('click', async () => {
                     // Call a function to delete the progress bar from the database
-                    deleteProgressBar(id);
+                    deleteProgressBar(user.uid, progressBarId);
                     // Remove the progress bar from the UI
                     newProgressBar.remove();
                 });
@@ -180,7 +180,7 @@ getConfig().then(firebaseConfig => {
                 // Call saveProgress to add the new progress bar to the database
                 const user = auth.currentUser;
                 if (user) {
-                    const progressBars = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({ title, percentage: bar.value }));
+                    const progressBars = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({ title: bar.title, percentage: bar.value }));
                     await saveProgress(user.uid, progressBars);
                 }
             }
@@ -192,35 +192,28 @@ getConfig().then(firebaseConfig => {
                 }
             });
 
-            async function deleteProgressBar(progressBarId) {
-                const user = auth.currentUser;
-                if (user) {
-                    try {
-                        const docRef = doc(db, 'users', user.uid);
-                        const docSnap = await getDoc(docRef);
-                        if (docSnap.exists()) {
-                            const userData = docSnap.data();
-                            const updatedProgressData = userData.progressData.filter(bar => bar.id !== progressBarId);
-                            await setDoc(doc(db, 'users', user.uid), { progressData: updatedProgressData });
-                        }
-                    } catch (error) {
-                        console.error('Error deleting progress bar:', error);
-                    }
+            async function deleteProgressBar(userId, progressBarId) {
+                try {
+                    const userDocRef = doc(db, 'users', userId);
+                    const userProgressDocRef = doc(userDocRef, 'progressBars', progressBarId);
+                    await deleteDoc(userProgressDocRef);
+                } catch (error) {
+                    console.error('Error deleting progress bar:', error);
                 }
             }
 
             async function saveProgress(uid, newProgressBar) {
                 try {
-                    const docRef = doc(db, 'users', uid);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        let progressData = userData.progressData || [];
-                        progressData.push(newProgressBar);
-                        await setDoc(docRef, { progressData });
+                    const userDocRef = doc(db, 'users', uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const userDocData = userDocSnap.data();
+                        const userProgressCollectionRef = collection(userDocRef, 'progressBars'); // Reference to the progressBars subcollection
+                        await addDoc(userProgressCollectionRef, newProgressBar); // Add the new progress bar to the subcollection
                     } else {
                         // If user document doesn't exist, create a new one with the progress data
-                        await setDoc(docRef, { progressData: [newProgressBar] });
+                        const userData = { progressData: [newProgressBar] };
+                        await setDoc(userDocRef, userData);
                     }
                 } catch (e) {
                     console.error('Error adding document: ', e);
@@ -230,11 +223,13 @@ getConfig().then(firebaseConfig => {
             async function loadProgress(uid) {
                 showSpinner();
                 try {
-                    const docRef = doc(db, 'users', uid);
-                    const docSnap = await getDoc(docRef);
-    
-                    if (docSnap.exists()) {
-                        return docSnap.data().progressData;
+                    const userDocRef = doc(db, 'users', uid);
+                    const userDocSnap = await getDoc(userDocRef);
+            
+                    if (userDocSnap.exists()) {
+                        const userProgressCollectionRef = collection(userDocRef, 'progressBars');
+                        const progressDataSnapshot = await getDocs(userProgressCollectionRef);
+                        return progressDataSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     } else {
                         console.log('No progress data found.');
                         return null;
