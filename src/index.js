@@ -58,6 +58,7 @@ function createProgressBar(title) {
     const progressBarHTML = `
     <div class="progress-bar-container" id="${progressBarId}">
     <h3 class="progress-title">${title}</h3>
+    <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
         <div class="form-group">
             <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
             <div class="d-flex justify-content-between">
@@ -89,6 +90,15 @@ function createProgressBar(title) {
         titleElement.textContent = '';
         titleElement.appendChild(input);
         input.focus();
+    });
+
+    // Add event listener to the delete button
+    const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
+    deleteButton.addEventListener('click', async () => {
+        // Delete the progress bar from the database
+        await deleteProgressBarFromDatabase(id);
+        // Remove the progress bar from the UI
+        newProgressBar.remove();
     });
 }
 
@@ -156,6 +166,8 @@ getConfig().then(firebaseConfig => {
                             console.log(progressData);
                             updateProgressBars(progressData);
                             showProgressBars();
+                        } else {
+                            updateProgressBars([]);
                         }
                     }).finally(() => {
                         hideSpinner();
