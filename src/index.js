@@ -31,7 +31,8 @@ function hideSpinner() {
 }
 
 function hideProgressBars() {
-    document.querySelector('.progress-bar-container').style.display = 'none';
+    const progressBarsContainer = document.querySelector('.progress-bars-container');
+    progressBarsContainer.innerHTML = '';
     document.getElementById('login-btn').style.display = 'inline-block';
     document.getElementById('logout-btn').style.display = 'none';
 }
@@ -102,7 +103,7 @@ getConfig().then(firebaseConfig => {
                             console.log(progressData);
                             updateProgressBars(progressData);
                             progressData.forEach(data => {
-                                createProgressBar(data.title, data.id); // Call createProgressBar for each progress bar
+                                createProgressBar(data.title, data.id, data.percentage); // Call createProgressBar for each progress bar
                             });
                             showProgressBars();
                         } else {
@@ -120,7 +121,7 @@ getConfig().then(firebaseConfig => {
             });
 
             // Function to create a new progress bar
-            async function createProgressBar(title, id) {
+            async function createProgressBar(title, id, percentage = 50) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
 
                 if (!progressBarsContainer) {
@@ -205,10 +206,17 @@ getConfig().then(firebaseConfig => {
                 }
             }
 
-            async function saveProgress(uid, newProgressBar) {
+            async function saveProgress(uid, progressBars) {
                 try {
-                    // Add a new document to the "progressBars" collection
-                    await Promise.all(newProgressBar.map(async (bar) => {
+                    // Clear existing progress bars for the user
+                    const progressBarsQuery = query(collection(db, 'progressBars'), where('uid', '==', uid));
+                    const progressBarsSnapshot = await getDocs(progressBarsQuery);
+                    progressBarsSnapshot.forEach(async doc => {
+                        await deleteDoc(doc.ref);
+                    });
+
+                    // Add new progress bars
+                    await Promise.all(progressBars.map(async bar => {
                         await addDoc(collection(db, 'progressBars'), {
                             uid: uid,
                             title: bar.title,
@@ -224,7 +232,7 @@ getConfig().then(firebaseConfig => {
                 showSpinner();
                 try {
                     const querySnapshot = await getDocs(query(collection(db, 'progressBars'), where('uid', '==', uid)));
-                    return querySnapshot.docs.map(doc => doc.data());
+                    return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
@@ -241,28 +249,15 @@ getConfig().then(firebaseConfig => {
                     // Clear any existing progress bars
                     progressBarsContainer.innerHTML = '';
 
-                    progressData.forEach((value, index) => {
-                        const progressBarId = `progress-bar-${index + 1}`;
-                        const progressBarHTML = `
-                        <div class="progress-bar-container" id="${progressBarId}">
-                            <h3 class="progress-title">${value.title}</h3>
-                            <div class="form-group">
-                                <input type="range" min="0" max="100" value="${value.progress}" class="progress-bar form-control-range" id="${progressBarId}">
-                                <div class="d-flex justify-content-between">
-                                    <label for="${progressBarId}">Progress</label>
-                                    <span class="percentage">${value.progress}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                        progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+                    progressData.forEach(value => {
+                        createProgressBar(value.title, value.id, value.percentage);
                     });
 
                     // Show progress bars container and hide placeholder text
                     progressBarsContainer.style.display = 'block';
                     noProgressText.style.display = 'none';
                 } else {
-                     // Hide progress bars container and show placeholder text
+                    // Hide progress bars container and show placeholder text
                     progressBarsContainer.style.display = 'none';
                     noProgressText.style.display = 'block';
                 }
