@@ -42,6 +42,43 @@ function showProgressBars() {
     document.getElementById('logout-btn').style.display = 'inline-block';
 }
 
+// Function to create a new progress bar
+function createProgressBar(title) {
+    const progressBarsContainer = document.querySelector('.progress-bars-container');
+
+    // Create HTML elements for the new progress bar
+    const progressBarHTML = `
+        <div class="progress-bar-container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>${title}</h3>
+                <button class="btn btn-sm btn-outline-primary edit-progress-bar-title-btn" data-toggle="modal" data-target="#editProgressBarModal">Edit</button>
+            </div>
+            <div class="form-group">
+                <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
+                <div class="d-flex justify-content-between">
+                    <span class="percentage">50%</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Append the new progress bar to the container
+    progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+}
+
+document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
+    const title = prompt('Enter the title for the new progress bar:');
+    if (title) {
+        createProgressBar(title);
+    }
+});
+
+document.getElementById('save-progress-bar-title-btn').addEventListener('click', () => {
+    const newTitle = document.getElementById('progress-bar-title-input').value;
+    // Update the title of the current progress bar
+    // This is just a placeholder, you'll need to implement your own logic to save the new title to the database
+});
+
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
     if (firebaseConfig) {

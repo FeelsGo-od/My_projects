@@ -38,6 +38,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Add button to create a new progress bar -->
+        <button id="add-progress-bar-btn" class="btn btn-primary">Add Progress Bar</button>
+        <!-- Modal for editing progress bar title -->
+        <div class="modal" id="editProgressBarModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Progress Bar Title</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control" id="progress-bar-title-input">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="save-progress-bar-title-btn">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
