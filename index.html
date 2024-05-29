@@ -30,15 +30,8 @@
     </header>
     <main class="container mt-5">
         <div class="progress-bars-container">
-            <div class="progress-bar-container" style="display: none;">
-                <div class="form-group">
-                    <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range" id="progress-bar-1">
-                    <div class="d-flex justify-content-between">
-                        <label for="progress-bar-1">Progress</label>
-                        <span id="percentage-1">50%</span>
-                    </div>
-                </div>
-            </div>
+            <!-- This div will be populated dynamically with progress bars -->
+            <p id="no-progress-text" style="display: none;">Start adding new tasks</p>
         </div>
 
         <!-- Add button to create a new progress bar -->

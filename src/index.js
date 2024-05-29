@@ -51,9 +51,12 @@ function createProgressBar(title) {
         return;
     }
 
+    // Generate a unique ID for the progress bar container
+    const progressBarId = `progress-bar-${Date.now()}`;
+
     // Create HTML elements for the new progress bar
     const progressBarHTML = `
-    <div class="progress-bar-container">
+    <div class="progress-bar-container" id="${progressBarId}">
     <h3 class="progress-title">${title}</h3>
         <div class="form-group">
             <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
@@ -78,8 +81,10 @@ function createProgressBar(title) {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = titleElement.textContent;
-        input.addEventListener('blur', () => {
+        input.addEventListener('blur', async () => {
             titleElement.textContent = input.value;
+            // Update the title in the database
+            await updateTitleInDatabase(progressBarId, input.value);
         });
         titleElement.textContent = '';
         titleElement.appendChild(input);
@@ -192,15 +197,38 @@ getConfig().then(firebaseConfig => {
             }
 
             function updateProgressBars(progressData) {
-                progressData.forEach((value, index) => {
-                    const progressBar = document.getElementById(`progress-bar-${index + 1}`);
-                    const percentage = document.getElementById(`percentage-${index + 1}`);
-                    if (progressBar && percentage) {
-                        progressBar.value = value;
-                        percentage.textContent = `${value}%`;
-                        percentage.style.width = `${value}%`;
-                    }
-                });
+                const progressBarsContainer = document.querySelector('.progress-bars-container');
+                const noProgressText = document.getElementById('no-progress-text');
+
+                if (progressData.length > 0) {
+                    // Clear any existing progress bars
+                    progressBarsContainer.innerHTML = '';
+
+                    progressData.forEach((value, index) => {
+                        const progressBarId = `progress-bar-${index + 1}`;
+                        const progressBarHTML = `
+                        <div class="progress-bar-container" id="${progressBarId}">
+                            <h3 class="progress-title">${value.title}</h3>
+                            <div class="form-group">
+                                <input type="range" min="0" max="100" value="${value.progress}" class="progress-bar form-control-range" id="${progressBarId}">
+                                <div class="d-flex justify-content-between">
+                                    <label for="${progressBarId}">Progress</label>
+                                    <span class="percentage">${value.progress}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                        progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+                    });
+
+                    // Show progress bars container and hide placeholder text
+                    progressBarsContainer.style.display = 'block';
+                    noProgressText.style.display = 'none';
+                } else {
+                     // Hide progress bars container and show placeholder text
+                    progressBarsContainer.style.display = 'none';
+                    noProgressText.style.display = 'block';
+                }
             }
 
             document.querySelectorAll('.progress-bar').forEach(bar => {
