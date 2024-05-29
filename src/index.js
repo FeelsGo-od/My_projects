@@ -115,7 +115,6 @@ getConfig().then(firebaseConfig => {
 
             async function createProgressBar(title, id, percentage = 50) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
-            
                 if (!progressBarsContainer) {
                     console.error('Progress bars container not found.');
                     return;
@@ -163,11 +162,19 @@ getConfig().then(firebaseConfig => {
                     deleteProgressBar(auth.currentUser.uid, progressBarId);
                     newProgressBar.remove();
                 });
-
+            
                 // Save the new progress bar to the database
-                if (auth.currentUser) {
-                    const newProgressBarData = { uid: auth.currentUser.uid, title, percentage };
-                    await addDoc(collection(db, 'progressBars'), newProgressBarData);
+                try {
+                    const user = auth.currentUser;
+                    if (user) {
+                        await addDoc(collection(db, 'progressBars'), {
+                            uid: user.uid,
+                            title,
+                            percentage
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error adding document: ', error);
                 }
             }
 
