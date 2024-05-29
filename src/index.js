@@ -209,10 +209,19 @@ getConfig().then(firebaseConfig => {
                 }
             }
 
-            async function saveProgress(uid, progressBars) {
+            async function saveProgress(uid, newProgressBar) {
                 try {
-                    const progressData = progressBars.map(bar => ({ title: bar.title, percentage: bar.percentage }));
-                    await setDoc(doc(db, 'users', uid), { progressData });
+                    const docRef = doc(db, 'users', uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        let progressData = userData.progressData || [];
+                        progressData.push(newProgressBar);
+                        await setDoc(docRef, { progressData });
+                    } else {
+                        // If user document doesn't exist, create a new one with the progress data
+                        await setDoc(docRef, { progressData: [newProgressBar] });
+                    }
                 } catch (e) {
                     console.error('Error adding document: ', e);
                 }
