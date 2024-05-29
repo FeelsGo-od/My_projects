@@ -204,16 +204,16 @@ getConfig().then(firebaseConfig => {
 
             async function saveProgress(uid, newProgressBar) {
                 try {
-                    const userDocRef = doc(db, 'users', uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        const userDocData = userDocSnap.data();
-                        const userProgressCollectionRef = collection(userDocRef, 'progressBars'); // Reference to the progressBars subcollection
-                        await addDoc(userProgressCollectionRef, newProgressBar); // Add the new progress bar to the subcollection
+                    const docRef = doc(db, 'users', uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        let progressData = userData.progressData || [];
+                        progressData.push(newProgressBar);
+                        await setDoc(docRef, { progressData: progressData });
                     } else {
                         // If user document doesn't exist, create a new one with the progress data
-                        const userData = { progressData: [newProgressBar] };
-                        await setDoc(userDocRef, userData);
+                        await setDoc(docRef, { progressData: [newProgressBar] });
                     }
                 } catch (e) {
                     console.error('Error adding document: ', e);
