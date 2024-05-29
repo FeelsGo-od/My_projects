@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"; // Import collection, addDoc, getDocs, and deleteDoc functions
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-check.js";
 
 if ('serviceWorker' in navigator) {
@@ -47,13 +47,12 @@ function showProgressBars() {
 }
 
 getConfig().then(firebaseConfig => {
-    // Initialize Firebase with the fetched config
     if (firebaseConfig) {
         const app = initializeApp(firebaseConfig);
         const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'),
             isTokenAutoRefreshEnabled: true
-        })
+        });
 
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
@@ -81,11 +80,9 @@ getConfig().then(firebaseConfig => {
             document.getElementById('logout-btn').addEventListener('click', () => {
                 showSpinner();
                 signOut(auth).then(() => {
-                    // user signed out
                     console.log('User signed out.');
                     hideProgressBars();
                 }).catch(error => {
-                    // handle errors
                     console.error('Error during sign out: ', error);
                 }).finally(() => {
                     hideSpinner();
@@ -95,33 +92,28 @@ getConfig().then(firebaseConfig => {
             onAuthStateChanged(auth, user => {
                 showSpinner();
                 if (user) {
-                    // user is signed in
                     sessionStorage.setItem('user', JSON.stringify(user));
-    
+
                     loadProgress(user.uid).then(progressData => {
                         if (progressData) {
                             console.log(progressData);
                             updateProgressBars(progressData);
-                            progressData.forEach(data => {
-                                createProgressBar(data.title, data.id, data.percentage); // Call createProgressBar for each progress bar
-                            });
                             showProgressBars();
                         } else {
                             updateProgressBars([]);
                         }
                     }).finally(() => {
                         hideSpinner();
-                    })
+                    });
                 } else {
-                    sessionStorage.removeItem('user')
+                    sessionStorage.removeItem('user');
                     console.log('No user is signed in');
                     hideProgressBars();
                     hideSpinner();            
                 }
             });
 
-            // Function to create a new progress bar
-            async function createProgressBar(title, id, percentage = 50) { // Default to 50% if not provided
+            async function createProgressBar(title, id, percentage = 50) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
             
                 if (!progressBarsContainer) {
@@ -129,14 +121,10 @@ getConfig().then(firebaseConfig => {
                     return;
                 }
             
-                // Generate a unique ID for the progress bar container if id is not provided
                 const progressBarId = id || `progress-bar-${Date.now()}`;
-            
-                // Create unique IDs for the input and the label
                 const inputId = `progress-input-${progressBarId}`;
                 const labelId = `progress-label-${progressBarId}`;
             
-                // Create HTML elements for the new progress bar
                 const progressBarHTML = `
                 <div class="progress-bar-container" id="${progressBarId}">
                     <h3 class="progress-title">${title}</h3>
@@ -151,14 +139,11 @@ getConfig().then(firebaseConfig => {
                 </div>
                 `;
             
-                // Append the new progress bar to the container
                 progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
             
-                // Show the newly created progress bar by setting display to "block"
                 const newProgressBar = progressBarsContainer.lastElementChild;
                 newProgressBar.style.display = 'block';
             
-                // Add event listener to the label to make it editable
                 const titleElement = newProgressBar.querySelector('.progress-title');
                 titleElement.addEventListener('click', () => {
                     const input = document.createElement('input');
@@ -166,7 +151,6 @@ getConfig().then(firebaseConfig => {
                     input.value = titleElement.textContent;
                     input.addEventListener('blur', async () => {
                         titleElement.textContent = input.value;
-                        // Update the title in the database
                         await updateTitleInDatabase(progressBarId, input.value);
                     });
                     titleElement.textContent = '';
@@ -174,20 +158,15 @@ getConfig().then(firebaseConfig => {
                     input.focus();
                 });
             
-                // Add event listener to the delete button
                 const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
                 deleteButton.addEventListener('click', async () => {
-                    // Call a function to delete the progress bar from the database
-                    deleteProgressBar(user.uid, progressBarId);
-                    // Remove the progress bar from the UI
+                    deleteProgressBar(auth.currentUser.uid, progressBarId);
                     newProgressBar.remove();
                 });
-            
-                // Call saveProgress to add the new progress bar to the database
-                const user = auth.currentUser;
-                if (user) {
+
+                if (auth.currentUser) {
                     const progressBars = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({ title: bar.title, percentage: bar.value }));
-                    await saveProgress(user.uid, progressBars);
+                    await saveProgress(auth.currentUser.uid, progressBars);
                 }
             }
 
@@ -210,14 +189,12 @@ getConfig().then(firebaseConfig => {
 
             async function saveProgress(uid, progressBars) {
                 try {
-                    // Clear existing progress bars for the user
                     const progressBarsQuery = query(collection(db, 'progressBars'), where('uid', '==', uid));
                     const progressBarsSnapshot = await getDocs(progressBarsQuery);
                     progressBarsSnapshot.forEach(async doc => {
                         await deleteDoc(doc.ref);
                     });
 
-                    // Add new progress bars
                     await Promise.all(progressBars.map(async bar => {
                         await addDoc(collection(db, 'progressBars'), {
                             uid: uid,
@@ -247,19 +224,16 @@ getConfig().then(firebaseConfig => {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
                 const noProgressText = document.getElementById('no-progress-text');
 
-                if (progressData.length > 0) {
-                    // Clear any existing progress bars
-                    progressBarsContainer.innerHTML = '';
+                progressBarsContainer.innerHTML = ''; // Clear existing progress bars
 
+                if (progressData.length > 0) {
                     progressData.forEach(value => {
                         createProgressBar(value.title, value.id, value.percentage);
                     });
 
-                    // Show progress bars container and hide placeholder text
                     progressBarsContainer.style.display = 'block';
                     noProgressText.style.display = 'none';
                 } else {
-                    // Hide progress bars container and show placeholder text
                     progressBarsContainer.style.display = 'none';
                     noProgressText.style.display = 'block';
                 }
@@ -272,19 +246,18 @@ getConfig().then(firebaseConfig => {
                         percentage.textContent = `${this.value}%`;
                         percentage.style.width = `${this.value}%`;
                     } else {
-                        console.error('Element not found:', `percentage-${this.id.split('-')[2]}`)
+                        console.error('Element not found:', `percentage-${this.id.split('-')[2]}`);
                     }
     
-                    const user = auth.currentUser;
-                    if (user) {
+                    if (auth.currentUser) {
                         const progressData = Array.from(document.querySelectorAll('.progress-bar')).map(bar => bar.value);
-                        saveProgress(user.uid, progressData);
+                        saveProgress(auth.currentUser.uid, progressData);
                     }
                 });
             });
         }).catch(error => {
             console.error('Error setting persistence: ', error);
-        })
+        });
     }
 }).catch(error => {
     console.error('Error fetching Firebase config: ', error);
