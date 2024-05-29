@@ -114,67 +114,48 @@ getConfig().then(firebaseConfig => {
             });
 
             async function createProgressBar(title, id, percentage = 50) {
-                const progressBarsContainer = document.querySelector('.progress-bars-container');
-                if (!progressBarsContainer) {
-                    console.error('Progress bars container not found.');
-                    return;
+                // Check if progress bar with provided ID already exists
+                if (document.getElementById(id)) {
+                    return; // If it exists, exit function to prevent duplication
                 }
             
-                const progressBarId = id || `progress-bar-${Date.now()}`;
-                const inputId = `progress-input-${progressBarId}`;
-                const labelId = `progress-label-${progressBarId}`;
+                const progressBarsContainer = document.querySelector('.progress-bars-container');
             
+                // Generate HTML for the new progress bar
                 const progressBarHTML = `
-                <div class="progress-bar-container" id="${progressBarId}">
-                    <h3 class="progress-title">${title}</h3>
-                    <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
-                    <div class="form-group">
-                        <label for="${inputId}">Progress</label>
-                        <input id="${inputId}" type="range" min="0" max="100" value="${percentage}" class="progress-bar form-control-range">
-                        <div class="d-flex justify-content-between">
-                            <span>${percentage}%</span>
+                    <div class="progress-bar-container" id="${id}">
+                        <h3 class="progress-title">${title}</h3>
+                        <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
+                        <div class="form-group">
+                            <label>Progress</label>
+                            <input type="range" min="0" max="100" value="${percentage}" class="progress-bar form-control-range">
+                            <div class="d-flex justify-content-between">
+                                <span>${percentage}%</span>
+                            </div>
                         </div>
                     </div>
-                </div>
                 `;
             
+                // Append the new progress bar to the container
                 progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
             
+                // Show the newly created progress bar
                 const newProgressBar = progressBarsContainer.lastElementChild;
                 newProgressBar.style.display = 'block';
             
-                const titleElement = newProgressBar.querySelector('.progress-title');
-                titleElement.addEventListener('click', () => {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = titleElement.textContent;
-                    input.addEventListener('blur', async () => {
-                        titleElement.textContent = input.value;
-                        await updateTitleInDatabase(progressBarId, input.value);
-                    });
-                    titleElement.textContent = '';
-                    titleElement.appendChild(input);
-                    input.focus();
-                });
-            
+                // Add event listener to the delete button
                 const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
                 deleteButton.addEventListener('click', async () => {
-                    deleteProgressBar(auth.currentUser.uid, progressBarId);
+                    // Call a function to delete the progress bar from the database
+                    deleteProgressBar(user.uid, id);
+                    // Remove the progress bar from the UI
                     newProgressBar.remove();
                 });
             
-                // Save the new progress bar to the database
-                try {
-                    const user = auth.currentUser;
-                    if (user) {
-                        await addDoc(collection(db, 'progressBars'), {
-                            uid: user.uid,
-                            title,
-                            percentage
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error adding document: ', error);
+                // Call saveProgress to add the new progress bar to the database
+                const user = auth.currentUser;
+                if (user) {
+                    await saveProgress(user.uid, { title, id, percentage });
                 }
             }
 
