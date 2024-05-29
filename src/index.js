@@ -112,7 +112,8 @@ getConfig().then(firebaseConfig => {
                     hideSpinner();            
                 }
             });
-
+            
+            let progressBarsArray = [];
             async function createProgressBar(title, id, percentage = 50) {
                 // Check if progress bar with provided ID already exists
                 if (document.getElementById(id)) {
@@ -152,19 +153,22 @@ getConfig().then(firebaseConfig => {
                     newProgressBar.remove();
                 });
             
-                // Call saveProgress to add the new progress bar to the database
-                const user = auth.currentUser;
-                if (user) {
-                    await saveProgress(user.uid, [{ title, percentage }]);
-                }
+                // Push the progress bar object to the array
+                progressBarsArray.push({ title, id, percentage });
             }
 
             document.getElementById('add-progress-bar-btn').addEventListener('click', async () => {
                 const title = prompt('Enter the title for the new progress bar:');
                 if (title) {
-                    await createProgressBar(title); // Ensure async completion
+                    const id = generateId(); // Generate an ID for the progress bar
+                    await createProgressBar(title, id); // Ensure async completion
                 }
             });
+
+            // Function to generate a unique ID for each progress bar
+            function generateId() {
+                return Math.random().toString(36).substr(2, 9);
+            }
 
             async function deleteProgressBar(userId, progressBarId) {
                 try {
@@ -172,6 +176,14 @@ getConfig().then(firebaseConfig => {
                     await deleteDoc(progressBarRef);
                 } catch (error) {
                     console.error('Error deleting progress bar:', error);
+                }
+            }
+
+            // Function to save all progress bars in the array to the database
+            async function saveAllProgressBars() {
+                if (auth.currentUser && progressBarsArray.length > 0) {
+                    await saveProgress(auth.currentUser.uid, progressBarsArray);
+                    progressBarsArray = []; // Clear the array after saving
                 }
             }
 
