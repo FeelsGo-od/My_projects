@@ -42,73 +42,6 @@ function showProgressBars() {
     document.getElementById('logout-btn').style.display = 'inline-block';
 }
 
-// Function to create a new progress bar
-function createProgressBar(title) {
-    const progressBarsContainer = document.querySelector('.progress-bars-container');
-
-    if (!progressBarsContainer) {
-        console.error('Progress bars container not found.');
-        return;
-    }
-
-    // Generate a unique ID for the progress bar container
-    const progressBarId = `progress-bar-${Date.now()}`;
-
-    // Create HTML elements for the new progress bar
-    const progressBarHTML = `
-    <div class="progress-bar-container" id="${progressBarId}">
-    <h3 class="progress-title">${title}</h3>
-    <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
-        <div class="form-group">
-            <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
-            <div class="d-flex justify-content-between">
-                <label>Progress</label>
-                <span class="percentage">50%</span>
-            </div>
-        </div>
-    </div>
-    `;
-
-    // Append the new progress bar to the container
-    progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
-
-    // Show the newly created progress bar by setting display to "block"
-    const newProgressBar = progressBarsContainer.lastElementChild;
-    newProgressBar.style.display = 'block';
-
-    // Add event listener to the label to make it editable
-    const titleElement = newProgressBar.querySelector('.progress-title');
-    titleElement.addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = titleElement.textContent;
-        input.addEventListener('blur', async () => {
-            titleElement.textContent = input.value;
-            // Update the title in the database
-            await updateTitleInDatabase(progressBarId, input.value);
-        });
-        titleElement.textContent = '';
-        titleElement.appendChild(input);
-        input.focus();
-    });
-
-    // Add event listener to the delete button
-    const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
-    deleteButton.addEventListener('click', async () => {
-        // Delete the progress bar from the database
-        await deleteProgressBarFromDatabase(id);
-        // Remove the progress bar from the UI
-        newProgressBar.remove();
-    });
-}
-
-document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
-    const title = prompt('Enter the title for the new progress bar:');
-    if (title) {
-        createProgressBar(title);
-    }
-});
-
 getConfig().then(firebaseConfig => {
     // Initialize Firebase with the fetched config
     if (firebaseConfig) {
@@ -177,6 +110,80 @@ getConfig().then(firebaseConfig => {
                     console.log('No user is signed in');
                     hideProgressBars();
                     hideSpinner();            
+                }
+            });
+
+            // Function to create a new progress bar
+            async function createProgressBar(title) {
+                const progressBarsContainer = document.querySelector('.progress-bars-container');
+
+                if (!progressBarsContainer) {
+                    console.error('Progress bars container not found.');
+                    return;
+                }
+
+                // Generate a unique ID for the progress bar container
+                const progressBarId = `progress-bar-${Date.now()}`;
+
+                // Create HTML elements for the new progress bar
+                const progressBarHTML = `
+                <div class="progress-bar-container" id="${progressBarId}">
+                <h3 class="progress-title">${title}</h3>
+                <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
+                    <div class="form-group">
+                        <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
+                        <div class="d-flex justify-content-between">
+                            <label>Progress</label>
+                            <span class="percentage">50%</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+
+                // Append the new progress bar to the container
+                progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+
+                // Show the newly created progress bar by setting display to "block"
+                const newProgressBar = progressBarsContainer.lastElementChild;
+                newProgressBar.style.display = 'block';
+
+                // Add event listener to the label to make it editable
+                const titleElement = newProgressBar.querySelector('.progress-title');
+                titleElement.addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = titleElement.textContent;
+                    input.addEventListener('blur', async () => {
+                        titleElement.textContent = input.value;
+                        // Update the title in the database
+                        await updateTitleInDatabase(progressBarId, input.value);
+                    });
+                    titleElement.textContent = '';
+                    titleElement.appendChild(input);
+                    input.focus();
+                });
+
+                // Add event listener to the delete button
+                const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
+                deleteButton.addEventListener('click', async () => {
+                    // Delete the progress bar from the database
+                    await deleteProgressBarFromDatabase(id);
+                    // Remove the progress bar from the UI
+                    newProgressBar.remove();
+                });
+
+                // Call saveProgress to add the new progress bar to the database
+                const user = auth.currentUser;
+                if (user) {
+                    const progressData = Array.from(document.querySelectorAll('.progress-bar')).map(bar => bar.value);
+                    await saveProgress(user.uid, progressData);
+                }
+            }
+
+            document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
+                const title = prompt('Enter the title for the new progress bar:');
+                if (title) {
+                    createProgressBar(title);
                 }
             });
 
