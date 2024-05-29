@@ -164,16 +164,17 @@ getConfig().then(firebaseConfig => {
                     newProgressBar.remove();
                 });
 
+                // Save the new progress bar to the database
                 if (auth.currentUser) {
-                    const progressBars = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({ title: bar.title, percentage: bar.value }));
-                    await saveProgress(auth.currentUser.uid, progressBars);
+                    const newProgressBarData = { uid: auth.currentUser.uid, title, percentage };
+                    await addDoc(collection(db, 'progressBars'), newProgressBarData);
                 }
             }
 
-            document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
+            document.getElementById('add-progress-bar-btn').addEventListener('click', async () => {
                 const title = prompt('Enter the title for the new progress bar:');
                 if (title) {
-                    createProgressBar(title);
+                    await createProgressBar(title); // Ensure async completion
                 }
             });
 
