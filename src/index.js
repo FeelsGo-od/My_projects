@@ -236,8 +236,11 @@ getConfig().then(firebaseConfig => {
                 try {
                     const progressBarRef = doc(db, 'progressBars', progressBarId);
                     await deleteDoc(progressBarRef);
+                    console.log('Progress bar deleted successfully');
+                    return true; // Indicate successful deletion
                 } catch (error) {
                     console.error('Error deleting progress bar:', error);
+                    return false; // Indicate deletion failure
                 }
             }
 
