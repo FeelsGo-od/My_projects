@@ -179,7 +179,7 @@ getConfig().then(firebaseConfig => {
                 const user = auth.currentUser;
                 if (user) {
                     const progressBars = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({ title, percentage: bar.value }));
-                    await saveProgress(user.uid, progressData);
+                    await saveProgress(user.uid, progressBars);
                 }
             }
 
