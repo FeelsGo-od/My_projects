@@ -270,16 +270,17 @@ getConfig().then(firebaseConfig => {
                     }
                 });
             });
-
+            
             async function updateProgressBar(userId, progressData) {
                 try {
+                    console.log('Updating progress bar:', progressData);
                     const progressBarRef = doc(db, 'progressBars', progressData.id);
                     await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
                 } catch (error) {
                     console.error('Error updating progress bar:', error);
                 }
             }
-            
+
         }).catch(error => {
             console.error('Error setting persistence: ', error);
         });
