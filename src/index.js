@@ -117,13 +117,15 @@ getConfig().then(firebaseConfig => {
             });
 
             // Function to create a new progress bar
-            async function createProgressBar(title, id, progressData) {
+            async function createProgressBar(title, id) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
 
                 if (!progressBarsContainer) {
                     console.error('Progress bars container not found.');
                     return;
                 }
+
+                progressBarsContainer.innerHTML = '';
 
                 // Generate a unique ID for the progress bar container
                 const progressBarId = `progress-bar-${Date.now()}`;
