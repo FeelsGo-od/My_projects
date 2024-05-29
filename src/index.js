@@ -147,10 +147,13 @@ getConfig().then(firebaseConfig => {
                 // Add event listener to the delete button
                 const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
                 deleteButton.addEventListener('click', async () => {
-                    // Call a function to delete the progress bar from the database
-                    deleteProgressBar(user.uid, id);
-                    // Remove the progress bar from the UI
-                    newProgressBar.remove();
+                    const user = auth.currentUser; // Retrieve the user
+                    if (user) {
+                        // Call a function to delete the progress bar from the database
+                        deleteProgressBar(user.uid, id);
+                        // Remove the progress bar from the UI
+                        newProgressBar.remove();
+                    }
                 });
             
                 // Push the progress bar object to the array
@@ -249,24 +252,34 @@ getConfig().then(firebaseConfig => {
             }
 
             document.querySelectorAll('.progress-bar').forEach(bar => {
-                bar.addEventListener('input', function() {
-                    const percentage = document.getElementById(`percentage-${this.id.split('-')[2]}`);
-                    if (percentage) {
-                        percentage.textContent = `${this.value}%`;
-                        percentage.style.width = `${this.value}%`;
-                    } else {
-                        console.error('Element not found:', `percentage-${this.id.split('-')[2]}`);
+                bar.addEventListener('input', async function() {
+                    const percentage = this.value;
+                    const progressBarId = this.parentNode.parentNode.id;
+                    const user = auth.currentUser;
+                    if (user) {
+                        const progressData = {
+                            id: progressBarId,
+                            percentage: parseInt(percentage) // Ensure percentage is an integer
+                        };
+                        await updateProgressBar(user.uid, progressData);
                     }
-
-                    if (auth.currentUser) {
-                        const progressData = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({
-                            title: bar.previousElementSibling.textContent, 
-                            percentage: bar.value 
-                        }));
-                        saveProgress(auth.currentUser.uid, progressData);
+                    // Update the displayed percentage
+                    const percentageDisplay = this.parentNode.querySelector('span');
+                    if (percentageDisplay) {
+                        percentageDisplay.textContent = `${percentage}%`;
                     }
                 });
             });
+
+            async function updateProgressBar(userId, progressData) {
+                try {
+                    const progressBarRef = doc(db, 'progressBars', progressData.id);
+                    await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
+                } catch (error) {
+                    console.error('Error updating progress bar:', error);
+                }
+            }
+            
         }).catch(error => {
             console.error('Error setting persistence: ', error);
         });
