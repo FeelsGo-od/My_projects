@@ -37,7 +37,7 @@ function hideProgressBars() {
 }
 
 function showProgressBars() {
-    document.querySelector('.progress-bar-container').style.display = 'block';
+    const progressBarContainer = document.querySelector('.progress-bar-container');
     if (progressBarContainer) {
         progressBarContainer.style.display = 'block';
     }
