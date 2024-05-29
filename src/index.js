@@ -121,41 +121,43 @@ getConfig().then(firebaseConfig => {
             });
 
             // Function to create a new progress bar
-            async function createProgressBar(title, id, percentage = 50) {
+            async function createProgressBar(title, id, percentage = 50) { // Default to 50% if not provided
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
-
+            
                 if (!progressBarsContainer) {
                     console.error('Progress bars container not found.');
                     return;
                 }
-
-                progressBarsContainer.innerHTML = '';
-
-                // Generate a unique ID for the progress bar container
-                const progressBarId = `progress-bar-${Date.now()}`;
-
+            
+                // Generate a unique ID for the progress bar container if id is not provided
+                const progressBarId = id || `progress-bar-${Date.now()}`;
+            
+                // Create unique IDs for the input and the label
+                const inputId = `progress-input-${progressBarId}`;
+                const labelId = `progress-label-${progressBarId}`;
+            
                 // Create HTML elements for the new progress bar
                 const progressBarHTML = `
                 <div class="progress-bar-container" id="${progressBarId}">
-                <h3 class="progress-title">${title}</h3>
-                <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
+                    <h3 class="progress-title">${title}</h3>
+                    <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
                     <div class="form-group">
-                        <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
+                        <label for="${inputId}">Progress</label>
+                        <input id="${inputId}" type="range" min="0" max="100" value="${percentage}" class="progress-bar form-control-range">
                         <div class="d-flex justify-content-between">
-                            <label>Progress</label>
-                            <span class="percentage">50%</span>
+                            <span>${percentage}%</span>
                         </div>
                     </div>
                 </div>
                 `;
-
+            
                 // Append the new progress bar to the container
                 progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
-
+            
                 // Show the newly created progress bar by setting display to "block"
                 const newProgressBar = progressBarsContainer.lastElementChild;
                 newProgressBar.style.display = 'block';
-
+            
                 // Add event listener to the label to make it editable
                 const titleElement = newProgressBar.querySelector('.progress-title');
                 titleElement.addEventListener('click', () => {
@@ -171,7 +173,7 @@ getConfig().then(firebaseConfig => {
                     titleElement.appendChild(input);
                     input.focus();
                 });
-
+            
                 // Add event listener to the delete button
                 const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
                 deleteButton.addEventListener('click', async () => {
@@ -180,7 +182,7 @@ getConfig().then(firebaseConfig => {
                     // Remove the progress bar from the UI
                     newProgressBar.remove();
                 });
-
+            
                 // Call saveProgress to add the new progress bar to the database
                 const user = auth.currentUser;
                 if (user) {
