@@ -207,17 +207,12 @@ getConfig().then(firebaseConfig => {
 
             async function saveProgress(uid, newProgressBar) {
                 try {
-                    const docRef = doc(db, 'users', uid);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        let progressData = userData.progressData || [];
-                        progressData.push(newProgressBar);
-                        await setDoc(docRef, { progressData: progressData });
-                    } else {
-                        // If user document doesn't exist, create a new one with the progress data
-                        await setDoc(docRef, { progressData: [newProgressBar] });
-                    }
+                    // Add a new document to the "progressBars" collection
+                    await addDoc(collection(db, 'progressBars'), {
+                        uid: uid,
+                        title: newProgressBar.title,
+                        percentage: newProgressBar.percentage
+                    });
                 } catch (e) {
                     console.error('Error adding document: ', e);
                 }
@@ -226,17 +221,8 @@ getConfig().then(firebaseConfig => {
             async function loadProgress(uid) {
                 showSpinner();
                 try {
-                    const userDocRef = doc(db, 'users', uid);
-                    const userDocSnap = await getDoc(userDocRef);
-            
-                    if (userDocSnap.exists()) {
-                        const userProgressCollectionRef = collection(userDocRef, 'progressBars');
-                        const progressDataSnapshot = await getDocs(userProgressCollectionRef);
-                        return progressDataSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    } else {
-                        console.log('No progress data found.');
-                        return null;
-                    }
+                    const querySnapshot = await getDocs(query(collection(db, 'progressBars'), where('uid', '==', uid)));
+                    return querySnapshot.docs.map(doc => doc.data());
                 } catch (e) {
                     console.error('Error loading progress: ', e);
                     return null;
