@@ -46,24 +46,30 @@ function showProgressBars() {
 function createProgressBar(title) {
     const progressBarsContainer = document.querySelector('.progress-bars-container');
 
+    if (!progressBarsContainer) {
+        console.error('Progress bars container not found.');
+        return;
+    }
+
     // Create HTML elements for the new progress bar
     const progressBarHTML = `
-        <div class="progress-bar-container">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3>${title}</h3>
-                <button class="btn btn-sm btn-outline-primary edit-progress-bar-title-btn" data-toggle="modal" data-target="#editProgressBarModal">Edit</button>
-            </div>
-            <div class="form-group">
-                <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
-                <div class="d-flex justify-content-between">
-                    <span class="percentage">50%</span>
-                </div>
+    <div class="progress-bar-container">
+        <div class="form-group">
+            <input type="range" min="0" max="100" value="50" class="progress-bar form-control-range">
+            <div class="d-flex justify-content-between">
+                <label>Progress</label>
+                <span class="percentage">50%</span>
             </div>
         </div>
+    </div>
     `;
 
     // Append the new progress bar to the container
     progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+
+    // Show the newly created progress bar by setting display to "block"
+    const newProgressBar = progressBarsContainer.lastElementChild;
+    newProgressBar.style.display = 'block';
 }
 
 document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
