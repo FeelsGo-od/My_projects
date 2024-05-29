@@ -155,7 +155,7 @@ getConfig().then(firebaseConfig => {
                 // Call saveProgress to add the new progress bar to the database
                 const user = auth.currentUser;
                 if (user) {
-                    await saveProgress(user.uid, { title, id, percentage });
+                    await saveProgress(user.uid, [{ title, percentage }]);
                 }
             }
 
@@ -177,14 +177,19 @@ getConfig().then(firebaseConfig => {
 
             async function saveProgress(uid, progressBars) {
                 try {
-                    const progressBarsQuery = query(collection(db, 'progressBars'), where('uid', '==', uid));
+                    // Get a reference to the progress bars collection for the current user
+                    const progressBarsCollectionRef = collection(db, 'progressBars');
+            
+                    // Delete existing progress bars for the current user
+                    const progressBarsQuery = query(progressBarsCollectionRef, where('uid', '==', uid));
                     const progressBarsSnapshot = await getDocs(progressBarsQuery);
                     progressBarsSnapshot.forEach(async doc => {
                         await deleteDoc(doc.ref);
                     });
-
+            
+                    // Add or update progress bars
                     await Promise.all(progressBars.map(async bar => {
-                        await addDoc(collection(db, 'progressBars'), {
+                        await addDoc(progressBarsCollectionRef, {
                             uid: uid,
                             title: bar.title,
                             percentage: bar.percentage
