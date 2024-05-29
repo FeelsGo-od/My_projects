@@ -98,6 +98,9 @@ getConfig().then(firebaseConfig => {
                         if (progressData) {
                             console.log(progressData);
                             updateProgressBars(progressData);
+                            progressData.forEach(data => {
+                                createProgressBar(data.title, data.id); // Call createProgressBar for each progress bar
+                            });
                             showProgressBars();
                         } else {
                             updateProgressBars([]);
