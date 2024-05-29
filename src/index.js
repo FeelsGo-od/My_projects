@@ -162,6 +162,7 @@ getConfig().then(firebaseConfig => {
                 if (title) {
                     const id = generateId(); // Generate an ID for the progress bar
                     await createProgressBar(title, id); // Ensure async completion
+                    saveAllProgressBars(); // Call the function to save all progress bars
                 }
             });
 
