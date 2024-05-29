@@ -38,7 +38,7 @@ function hideProgressBars() {
 }
 
 function showProgressBars() {
-    const progressBarContainer = document.querySelector('.progress-bar-container');
+    const progressBarContainer = document.querySelector('.progress-bars-container');
     if (progressBarContainer) {
         progressBarContainer.style.display = 'block';
     }
@@ -180,9 +180,8 @@ getConfig().then(firebaseConfig => {
 
             async function deleteProgressBar(userId, progressBarId) {
                 try {
-                    const userDocRef = doc(db, 'users', userId);
-                    const userProgressDocRef = doc(userDocRef, 'progressBars', progressBarId);
-                    await deleteDoc(userProgressDocRef);
+                    const progressBarRef = doc(db, 'progressBars', progressBarId);
+                    await deleteDoc(progressBarRef);
                 } catch (error) {
                     console.error('Error deleting progress bar:', error);
                 }
@@ -249,9 +248,12 @@ getConfig().then(firebaseConfig => {
                     } else {
                         console.error('Element not found:', `percentage-${this.id.split('-')[2]}`);
                     }
-    
+
                     if (auth.currentUser) {
-                        const progressData = Array.from(document.querySelectorAll('.progress-bar')).map(bar => bar.value);
+                        const progressData = Array.from(document.querySelectorAll('.progress-bar')).map(bar => ({
+                            title: bar.previousElementSibling.textContent, 
+                            percentage: bar.value 
+                        }));
                         saveProgress(auth.currentUser.uid, progressData);
                     }
                 });
