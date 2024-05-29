@@ -99,7 +99,7 @@ getConfig().then(firebaseConfig => {
                             console.log(progressData);
                             updateProgressBars(progressData);
                             progressData.forEach(data => {
-                                createProgressBar(data.title, data.id); // Call createProgressBar for each progress bar
+                                createProgressBar(data.title, data.id, progressData); // Call createProgressBar for each progress bar
                             });
                             showProgressBars();
                         } else {
@@ -117,7 +117,7 @@ getConfig().then(firebaseConfig => {
             });
 
             // Function to create a new progress bar
-            async function createProgressBar(title, id) {
+            async function createProgressBar(title, id, progressData) {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
 
                 if (!progressBarsContainer) {
