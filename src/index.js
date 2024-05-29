@@ -38,9 +38,9 @@ function hideProgressBars() {
 }
 
 function showProgressBars() {
-    const progressBarContainer = document.querySelector('.progress-bars-container');
-    if (progressBarContainer) {
-        progressBarContainer.style.display = 'block';
+    const progressBarsContainer = document.querySelector('.progress-bars-container');
+    if (progressBarsContainer) {
+        progressBarsContainer.style.display = 'block';
     }
     document.getElementById('login-btn').style.display = 'none';
     document.getElementById('logout-btn').style.display = 'inline-block';
