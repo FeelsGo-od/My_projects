@@ -70,6 +70,20 @@ function createProgressBar(title) {
     // Show the newly created progress bar by setting display to "block"
     const newProgressBar = progressBarsContainer.lastElementChild;
     newProgressBar.style.display = 'block';
+
+    // Add event listener to the label to make it editable
+    const label = newProgressBar.querySelector('.progress-label');
+    label.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = label.textContent;
+        input.addEventListener('blur', () => {
+            label.textContent = input.value;
+        });
+        label.textContent = '';
+        label.appendChild(input);
+        input.focus();
+    });
 }
 
 document.getElementById('add-progress-bar-btn').addEventListener('click', () => {
@@ -77,12 +91,6 @@ document.getElementById('add-progress-bar-btn').addEventListener('click', () => 
     if (title) {
         createProgressBar(title);
     }
-});
-
-document.getElementById('save-progress-bar-title-btn').addEventListener('click', () => {
-    const newTitle = document.getElementById('progress-bar-title-input').value;
-    // Update the title of the current progress bar
-    // This is just a placeholder, you'll need to implement your own logic to save the new title to the database
 });
 
 getConfig().then(firebaseConfig => {
