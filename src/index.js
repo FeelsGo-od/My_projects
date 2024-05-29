@@ -164,21 +164,21 @@ getConfig().then(firebaseConfig => {
                     }
                 });
 
-                document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
-                    if (event.target.classList.contains('delete-progress-bar-btn')) {
-                        const deleteButton = event.target;
-                        const progressBarContainer = deleteButton.closest('.progress-bar-container');
-                        const progressBarId = progressBarContainer.id;
-                        const user = auth.currentUser; // Retrieve the user
+                // document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
+                //     if (event.target.classList.contains('delete-progress-bar-btn')) {
+                //         const deleteButton = event.target;
+                //         const progressBarContainer = deleteButton.closest('.progress-bar-container');
+                //         const progressBarId = progressBarContainer.id;
+                //         const user = auth.currentUser; // Retrieve the user
                 
-                        if (user) {
-                            // Call a function to delete the progress bar from the database
-                            await deleteProgressBar(user.uid, progressBarId);
-                            // Remove the progress bar from the UI
-                            progressBarContainer.remove();
-                        }
-                    }
-                });
+                //         if (user) {
+                //             // Call a function to delete the progress bar from the database
+                //             await deleteProgressBar(user.uid, progressBarId);
+                //             // Remove the progress bar from the UI
+                //             progressBarContainer.remove();
+                //         }
+                //     }
+                // });
             
                 // // Add event listener to the delete button
                 // const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
@@ -195,6 +195,28 @@ getConfig().then(firebaseConfig => {
                 // Push the progress bar object to the array
                 progressBarsArray.push({ title, id, percentage });
             }
+
+            document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
+                if (event.target.classList.contains('delete-progress-bar-btn')) {
+                    const deleteButton = event.target;
+                    const progressBarContainer = deleteButton.closest('.progress-bar-container');
+                    const progressBarId = progressBarContainer.id;
+                    const user = auth.currentUser; // Retrieve the user
+            
+                    if (user) {
+                        try {
+                            // Call the deleteProgressBar function to delete the progress bar from the database
+                            await deleteProgressBar(user.uid, progressBarId);
+                            // Remove the progress bar from the UI
+                            progressBarContainer.remove();
+                            console.log('Progress bar removed from UI');
+                        } catch (error) {
+                            console.error('Error deleting progress bar:', error);
+                            // Handle the error as needed (e.g., display an error message to the user)
+                        }
+                    }
+                }
+            });
 
             document.getElementById('add-progress-bar-btn').addEventListener('click', async () => {
                 const title = prompt('Enter the title for the new progress bar:');
