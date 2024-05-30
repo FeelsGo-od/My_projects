@@ -116,10 +116,10 @@ getConfig().then(firebaseConfig => {
             
             let progressBarsArray = [];
             async function createProgressBar(title, id, percentage = 50) {
+                // Ensure the progress bar ID is unique and consistent
                 if (!id) {
-                    id = generateId();
+                    id = generateId(); // Generate ID if not provided
                 }
-                console.log(`Creating progress bar with ID: ${id}`); // Log the ID here
             
                 const user = auth.currentUser;
                 if (!user) {
@@ -149,7 +149,6 @@ getConfig().then(firebaseConfig => {
                 progressBarInput.addEventListener('input', async function() {
                     const percentage = this.value;
                     const progressBarId = this.parentNode.parentNode.id;
-                    console.log(`Updating progress bar with ID: ${progressBarId}`); // Log the ID here
                     if (user) {
                         const progressData = {
                             id: progressBarId,
@@ -163,8 +162,20 @@ getConfig().then(firebaseConfig => {
                     }
                 });
             
+                // Ensure the progress bar is correctly stored in the array
                 progressBarsArray.push({ title, id, percentage, uid: user.uid });
-                await saveAllProgressBars();
+                await saveProgressBar(user.uid, { title, id, percentage, uid: user.uid }); // Save the progress bar immediately
+            }
+
+
+            async function saveProgressBar(userId, progressBar) {
+                try {
+                    const progressBarRef = doc(db, 'progressBars', progressBar.id);
+                    await setDoc(progressBarRef, progressBar); // Explicitly set the document ID
+                    console.log('Progress bar saved successfully with ID:', progressBar.id);
+                } catch (error) {
+                    console.error('Error saving progress bar:', error);
+                }
             }
 
             document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
@@ -241,10 +252,13 @@ getConfig().then(firebaseConfig => {
             // Function to save all progress bars in the array to the database
             async function saveAllProgressBars() {
                 if (auth.currentUser && progressBarsArray.length > 0) {
-                    await saveProgress(auth.currentUser.uid, progressBarsArray);
+                    await Promise.all(progressBarsArray.map(async bar => {
+                        await saveProgressBar(auth.currentUser.uid, bar); // Save each progress bar with its explicit ID
+                    }));
                     progressBarsArray = []; // Clear the array after saving
                 }
             }
+
 
             async function saveProgress(uid, progressBars) {
                 try {
@@ -260,14 +274,15 @@ getConfig().then(firebaseConfig => {
             
                     // Add or update progress bars
                     await Promise.all(progressBars.map(async bar => {
-                        await addDoc(progressBarsCollectionRef, {
+                        const progressBarRef = doc(progressBarsCollectionRef, bar.id); // Explicitly set the document ID
+                        await setDoc(progressBarRef, {
                             uid: uid,
                             title: bar.title,
                             percentage: bar.percentage
                         });
                     }));
                 } catch (e) {
-                    console.error('Error adding document: ', e);
+                    console.error('Error saving progress:', e);
                 }
             }
 
