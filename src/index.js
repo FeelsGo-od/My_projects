@@ -114,113 +114,86 @@ getConfig().then(firebaseConfig => {
             });
             
             let progressBarsArray = [];
-            async function createProgressBar(title, percentage = 50) {
-                const user = auth.currentUser;
-                if (user) {
-                    const progressBarsContainer = document.querySelector('.progress-bars-container');
+            async function createProgressBar(title, id, percentage = 50) {
+                // Check if progress bar with provided ID already exists
+                if (document.getElementById(id)) {
+                    return; // If it exists, exit function to prevent duplication
+                }
             
-                    // Generate HTML for the new progress bar
-                    const progressBarHTML = `
-                        <div class="progress-bar-container">
-                            <h3 class="progress-title">${title}</h3>
-                            <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
-                            <div class="form-group">
-                                <label>Progress</label>
-                                <input type="range" min="0" max="100" value="${percentage}" class="progress-bar form-control-range">
-                                <div class="d-flex justify-content-between">
-                                    <span>${percentage}%</span>
-                                </div>
+                const progressBarsContainer = document.querySelector('.progress-bars-container');
+            
+                // Generate HTML for the new progress bar
+                const progressBarHTML = `
+                    <div class="progress-bar-container" id="${id}">
+                        <h3 class="progress-title">${title}</h3>
+                        <button class="btn btn-danger delete-progress-bar-btn">Delete</button>
+                        <div class="form-group">
+                            <label>Progress</label>
+                            <input type="range" min="0" max="100" value="${percentage}" class="progress-bar form-control-range">
+                            <div class="d-flex justify-content-between">
+                                <span>${percentage}%</span>
                             </div>
                         </div>
-                    `;
-                
-                    // Append the new progress bar to the container
-                    progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
-                
-                    // Show the newly created progress bar
-                    const newProgressBar = progressBarsContainer.lastElementChild;
-                    newProgressBar.style.display = 'block';
+                    </div>
+                `;
+            
+                // Append the new progress bar to the container
+                progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
+            
+                // Show the newly created progress bar
+                const newProgressBar = progressBarsContainer.lastElementChild;
+                newProgressBar.style.display = 'block';
 
-                    // Save the progress bar to the database and get the generated ID
-                    try {
-                        const progressBarDoc = await addDoc(collection(db, 'progressBars'), {
-                            uid: user.uid,
-                            title: title,
-                            percentage: percentage
-                        });
-
-                        // Set the ID of the progress bar in the UI to the ID from Firestore
-                        newProgressBar.setAttribute('id', progressBarDoc.id);
-                    } catch (error) {
-                        console.error('Error creating progress bar:', error);
-                        // Handle the error (e.g., remove the progress bar from the UI)
-                        newProgressBar.remove();
-                        return;
+                // Add event listener to the input element of the new progress bar
+                const progressBarInput = newProgressBar.querySelector('.progress-bar');
+                progressBarInput.addEventListener('input', async function() {
+                    const percentage = this.value;
+                    const progressBarId = this.parentNode.parentNode.id;
+                    const user = auth.currentUser;
+                    if (user) {
+                        const progressData = {
+                            id: progressBarId,
+                            percentage: parseInt(percentage) // Ensure percentage is an integer
+                        };
+                        await updateProgressBar(user.uid, progressData);
                     }
-    
-                    // Add event listener to the input element of the new progress bar
-                    const progressBarInput = newProgressBar.querySelector('.progress-bar');
-                    progressBarInput.addEventListener('input', async function() {
-                        const percentage = this.value;
-                        const progressBarId = newProgressBar.id;
-                        const user = auth.currentUser;
-                        if (user) {
-                            const progressData = {
-                                id: progressBarId,
-                                percentage: parseInt(percentage) // Ensure percentage is an integer
-                            };
-                            await updateProgressBar(user.uid, progressData);
-                        }
-                        // Update the displayed percentage
-                        const percentageDisplay = this.parentNode.querySelector('span');
-                        if (percentageDisplay) {
-                            percentageDisplay.textContent = `${percentage}%`;
-                        }
-                    });
-    
-                    // document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
-                    //     if (event.target.classList.contains('delete-progress-bar-btn')) {
-                    //         const deleteButton = event.target;
-                    //         const progressBarContainer = deleteButton.closest('.progress-bar-container');
-                    //         const progressBarId = progressBarContainer.id;
-                    //         const user = auth.currentUser; // Retrieve the user
-                    
-                    //         if (user) {
-                    //             // Call a function to delete the progress bar from the database
-                    //             await deleteProgressBar(user.uid, progressBarId);
-                    //             // Remove the progress bar from the UI
-                    //             progressBarContainer.remove();
-                    //         }
-                    //     }
-                    // });
-                
-                    // // Add event listener to the delete button
-                    // const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
-                    // deleteButton.addEventListener('click', async () => {
-                    //     const user = auth.currentUser; // Retrieve the user
-                    //     if (user) {
-                    //         // Call a function to delete the progress bar from the database
-                    //         deleteProgressBar(user.uid, id);
-                    //         // Remove the progress bar from the UI
-                    //         newProgressBar.remove();
-                    //     }
-                    // });
-                
-                    // Push the progress bar object to the array
-                    progressBarsArray.push({ title, id: newProgressBar.id, percentage });
-                }
-            }
+                    // Update the displayed percentage
+                    const percentageDisplay = this.parentNode.querySelector('span');
+                    if (percentageDisplay) {
+                        percentageDisplay.textContent = `${percentage}%`;
+                    }
+                });
 
-            async function deleteProgressBar(userId, progressBarId) {
-                try {
-                    const progressBarRef = doc(db, 'progressBars', progressBarId);
-                    await deleteDoc(progressBarRef);
-                    console.log('Progress bar deleted successfully');
-                    return true; // Indicate successful deletion
-                } catch (error) {
-                    console.error('Error deleting progress bar:', error);
-                    return false; // Indicate deletion failure
-                }
+                // document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
+                //     if (event.target.classList.contains('delete-progress-bar-btn')) {
+                //         const deleteButton = event.target;
+                //         const progressBarContainer = deleteButton.closest('.progress-bar-container');
+                //         const progressBarId = progressBarContainer.id;
+                //         const user = auth.currentUser; // Retrieve the user
+                
+                //         if (user) {
+                //             // Call a function to delete the progress bar from the database
+                //             await deleteProgressBar(user.uid, progressBarId);
+                //             // Remove the progress bar from the UI
+                //             progressBarContainer.remove();
+                //         }
+                //     }
+                // });
+            
+                // // Add event listener to the delete button
+                // const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
+                // deleteButton.addEventListener('click', async () => {
+                //     const user = auth.currentUser; // Retrieve the user
+                //     if (user) {
+                //         // Call a function to delete the progress bar from the database
+                //         deleteProgressBar(user.uid, id);
+                //         // Remove the progress bar from the UI
+                //         newProgressBar.remove();
+                //     }
+                // });
+            
+                // Push the progress bar object to the array
+                progressBarsArray.push({ title, id, percentage });
             }
 
             document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
