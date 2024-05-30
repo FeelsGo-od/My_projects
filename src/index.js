@@ -235,9 +235,16 @@ getConfig().then(firebaseConfig => {
             async function deleteProgressBar(userId, progressBarId) {
                 try {
                     const progressBarRef = doc(db, 'progressBars', progressBarId);
-                    await deleteDoc(progressBarRef);
-                    console.log('Progress bar deleted successfully');
-                    return true; // Indicate successful deletion
+                    const progressBarDoc = await getDoc(progressBarRef);
+                    if (progressBarDoc.exists()) {
+                        console.log('Progress bar document exists. Proceeding with deletion.');
+                        await deleteDoc(progressBarRef);
+                        console.log('Progress bar deleted successfully');
+                        return true; // Indicate successful deletion
+                    } else {
+                        console.warn('Progress bar document does not exist. Cannot delete.');
+                        return false; // Indicate deletion failure
+                    }
                 } catch (error) {
                     console.error('Error deleting progress bar:', error);
                     return false; // Indicate deletion failure
