@@ -231,13 +231,30 @@ getConfig().then(firebaseConfig => {
             function generateId() {
                 return Math.random().toString(36).substr(2, 9);
             }
-
             async function deleteProgressBar(userId, progressBarId) {
                 try {
+                    console.log('Attempting to delete progress bar:');
+                    console.log('User ID:', userId);
+                    console.log('Progress Bar ID:', progressBarId);
+            
                     const progressBarRef = doc(db, 'progressBars', progressBarId);
+                    console.log('Document Reference:', progressBarRef.path);
+            
+                    // Check if the user is authenticated
+                    const user = auth.currentUser;
+                    if (!user) {
+                        console.error('User is not authenticated.');
+                        return false; // Indicate deletion failure
+                    }
+            
+                    // Check if the document exists before deleting
                     const progressBarDoc = await getDoc(progressBarRef);
                     if (progressBarDoc.exists()) {
-                        console.log('Progress bar document exists. Proceeding with deletion.');
+                        if (progressBarDoc.data().uid !== user.uid) {
+                            console.error('User does not own this document.');
+                            return false; // Indicate deletion failure
+                        }
+                        console.log('Progress bar document exists and user owns it. Proceeding with deletion.');
                         await deleteDoc(progressBarRef);
                         console.log('Progress bar deleted successfully');
                         return true; // Indicate successful deletion
