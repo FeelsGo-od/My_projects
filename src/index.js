@@ -116,6 +116,11 @@ getConfig().then(firebaseConfig => {
             
             let progressBarsArray = [];
             async function createProgressBar(title, id, percentage = 50) {
+                if (!id) {
+                    id = generateId();
+                }
+                console.log(`Creating progress bar with ID: ${id}`); // Log the ID here
+            
                 const user = auth.currentUser;
                 if (!user) {
                     throw new Error('User is not authenticated');
@@ -144,6 +149,7 @@ getConfig().then(firebaseConfig => {
                 progressBarInput.addEventListener('input', async function() {
                     const percentage = this.value;
                     const progressBarId = this.parentNode.parentNode.id;
+                    console.log(`Updating progress bar with ID: ${progressBarId}`); // Log the ID here
                     if (user) {
                         const progressData = {
                             id: progressBarId,
@@ -282,10 +288,12 @@ getConfig().then(firebaseConfig => {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
                 const noProgressText = document.getElementById('no-progress-text');
             
+                // Clear any existing progress bars
                 progressBarsContainer.innerHTML = '';
             
                 if (progressData.length > 0) {
                     progressData.forEach(value => {
+                        // Pass the correct ID to createProgressBar
                         createProgressBar(value.title, value.id, value.percentage);
                     });
             
@@ -299,6 +307,7 @@ getConfig().then(firebaseConfig => {
             
             async function updateProgressBar(userId, progressData) {
                 try {
+                    console.log(`Attempting to update progress bar with ID: ${progressData.id}`); // Log the ID here
                     const progressBarRef = doc(db, 'progressBars', progressData.id);
                     await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
                     console.log(`Progress bar ${progressData.id} updated successfully`);
