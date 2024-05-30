@@ -115,12 +115,8 @@ getConfig().then(firebaseConfig => {
             });
             
             let progressBarsArray = [];
+
             async function createProgressBar(title, id, percentage = 50) {
-                // Ensure the progress bar ID is unique and consistent
-                if (!id) {
-                    id = generateId(); // Generate ID if not provided
-                }
-            
                 const user = auth.currentUser;
                 if (!user) {
                     throw new Error('User is not authenticated');
@@ -152,7 +148,7 @@ getConfig().then(firebaseConfig => {
                     if (user) {
                         const progressData = {
                             id: progressBarId,
-                            percentage: parseInt(percentage) // Ensure percentage is an integer
+                            percentage: parseInt(percentage)
                         };
                         await updateProgressBar(user.uid, progressData);
                     }
@@ -162,16 +158,15 @@ getConfig().then(firebaseConfig => {
                     }
                 });
             
-                // Ensure the progress bar is correctly stored in the array
                 progressBarsArray.push({ title, id, percentage, uid: user.uid });
-                await saveProgressBar(user.uid, { title, id, percentage, uid: user.uid }); // Save the progress bar immediately
+                await saveProgressBar(user.uid, { title, id, percentage, uid: user.uid });
             }
 
 
             async function saveProgressBar(userId, progressBar) {
                 try {
                     const progressBarRef = doc(db, 'progressBars', progressBar.id);
-                    await setDoc(progressBarRef, progressBar); // Explicitly set the document ID
+                    await setDoc(progressBarRef, progressBar);
                     console.log('Progress bar saved successfully with ID:', progressBar.id);
                 } catch (error) {
                     console.error('Error saving progress bar:', error);
@@ -183,18 +178,15 @@ getConfig().then(firebaseConfig => {
                     const deleteButton = event.target;
                     const progressBarContainer = deleteButton.closest('.progress-bar-container');
                     const progressBarId = progressBarContainer.id;
-                    const user = auth.currentUser; // Retrieve the user
+                    const user = auth.currentUser;
             
                     if (user) {
                         try {
-                            // Call the deleteProgressBar function to delete the progress bar from the database
                             await deleteProgressBar(user.uid, progressBarId);
-                            // Remove the progress bar from the UI
                             progressBarContainer.remove();
                             console.log('Progress bar removed from UI');
                         } catch (error) {
                             console.error('Error deleting progress bar:', error);
-                            // Handle the error as needed (e.g., display an error message to the user)
                         }
                     }
                 }
@@ -203,138 +195,127 @@ getConfig().then(firebaseConfig => {
             document.getElementById('add-progress-bar-btn').addEventListener('click', async () => {
                 const title = prompt('Enter the title for the new progress bar:');
                 if (title) {
-                    const id = generateId(); // Generate an ID for the progress bar
-                    await createProgressBar(title, id); // Ensure async completion
-                    saveAllProgressBars(); // Call the function to save all progress bars
+                    const id = generateId();
+                    await createProgressBar(title, id);
+                    saveAllProgressBars();}
+                });
+    
+                // Function to generate a unique ID for each progress bar
+                function generateId() {
+                    return Math.random().toString(36).substr(2, 9);
                 }
-            });
-
-            // Function to generate a unique ID for each progress bar
-            function generateId() {
-                return Math.random().toString(36).substr(2, 9);
-            }
-
-            async function deleteProgressBar(userId, progressBarId) {
-                try {
-                    console.log('Attempting to delete progress bar:');
-                    console.log('User ID:', userId);
-                    console.log('Progress Bar ID:', progressBarId);
-            
-                    const progressBarRef = doc(db, 'progressBars', progressBarId);
-                    console.log('Document Reference:', progressBarRef.path);
-            
-                    // Check if the document exists before deleting
-                    const progressBarDoc = await getDoc(progressBarRef);
-                    if (progressBarDoc.exists()) {
-                        console.log('Progress bar document exists. Checking permissions.');
-            
-                        // Check if the document's UID matches the current user's UID
-                        const docData = progressBarDoc.data();
-                        if (docData.uid === userId) {
-                            console.log('User has permission to delete this progress bar. Proceeding with deletion.');
-                            await deleteDoc(progressBarRef);
-                            console.log('Progress bar deleted successfully');
-                            return true; // Indicate successful deletion
+    
+                async function deleteProgressBar(userId, progressBarId) {
+                    try {
+                        console.log('Attempting to delete progress bar:');
+                        console.log('User ID:', userId);
+                        console.log('Progress Bar ID:', progressBarId);
+                
+                        const progressBarRef = doc(db, 'progressBars', progressBarId);
+                        console.log('Document Reference:', progressBarRef.path);
+                
+                        const progressBarDoc = await getDoc(progressBarRef);
+                        if (progressBarDoc.exists()) {
+                            console.log('Progress bar document exists. Checking permissions.');
+                
+                            const docData = progressBarDoc.data();
+                            if (docData.uid === userId) {
+                                console.log('User has permission to delete this progress bar. Proceeding with deletion.');
+                                await deleteDoc(progressBarRef);
+                                console.log('Progress bar deleted successfully');
+                                return true;
+                            } else {
+                                console.warn('User does not have permission to delete this progress bar.');
+                                return false;
+                            }
                         } else {
-                            console.warn('User does not have permission to delete this progress bar.');
-                            return false; // Indicate deletion failure due to permission
+                            console.warn('Progress bar document does not exist. Cannot delete.');
+                            return false;
                         }
-                    } else {
-                        console.warn('Progress bar document does not exist. Cannot delete.');
-                        return false; // Indicate deletion failure due to non-existent document
+                    } catch (error) {
+                        console.error('Error deleting progress bar:', error);
+                        return false;
                     }
-                } catch (error) {
-                    console.error('Error deleting progress bar:', error);
-                    return false; // Indicate deletion failure
                 }
-            }
-
-            // Function to save all progress bars in the array to the database
-            async function saveAllProgressBars() {
-                if (auth.currentUser && progressBarsArray.length > 0) {
-                    await Promise.all(progressBarsArray.map(async bar => {
-                        await saveProgressBar(auth.currentUser.uid, bar); // Save each progress bar with its explicit ID
-                    }));
-                    progressBarsArray = []; // Clear the array after saving
+    
+                async function saveAllProgressBars() {
+                    if (auth.currentUser && progressBarsArray.length > 0) {
+                        await Promise.all(progressBarsArray.map(async bar => {
+                            await saveProgressBar(auth.currentUser.uid, bar);
+                        }));
+                        progressBarsArray = [];
+                    }
                 }
-            }
-
-
-            async function saveProgress(uid, progressBars) {
-                try {
-                    // Get a reference to the progress bars collection for the current user
-                    const progressBarsCollectionRef = collection(db, 'progressBars');
-            
-                    // Delete existing progress bars for the current user
-                    const progressBarsQuery = query(progressBarsCollectionRef, where('uid', '==', uid));
-                    const progressBarsSnapshot = await getDocs(progressBarsQuery);
-                    progressBarsSnapshot.forEach(async doc => {
-                        await deleteDoc(doc.ref);
-                    });
-            
-                    // Add or update progress bars
-                    await Promise.all(progressBars.map(async bar => {
-                        const progressBarRef = doc(progressBarsCollectionRef, bar.id); // Explicitly set the document ID
-                        await setDoc(progressBarRef, {
-                            uid: uid,
-                            title: bar.title,
-                            percentage: bar.percentage
+    
+                async function saveProgress(uid, progressBars) {
+                    try {
+                        const progressBarsCollectionRef = collection(db, 'progressBars');
+                        const progressBarsQuery = query(progressBarsCollectionRef, where('uid', '==', uid));
+                        const progressBarsSnapshot = await getDocs(progressBarsQuery);
+                        progressBarsSnapshot.forEach(async doc => {
+                            await deleteDoc(doc.ref);
                         });
-                    }));
-                } catch (e) {
-                    console.error('Error saving progress:', e);
+                
+                        await Promise.all(progressBars.map(async bar => {
+                            const progressBarRef = doc(progressBarsCollectionRef, bar.id);
+                            await setDoc(progressBarRef, {
+                                uid: uid,
+                                title: bar.title,
+                                percentage: bar.percentage
+                            });
+                        }));
+                    } catch (e) {
+                        console.error('Error saving progress:', e);
+                    }
                 }
-            }
-
-            async function loadProgress(uid) {
-                showSpinner();
-                try {
-                    const querySnapshot = await getDocs(query(collection(db, 'progressBars'), where('uid', '==', uid)));
-                    return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-                } catch (e) {
-                    console.error('Error loading progress: ', e);
-                    return null;
-                } finally {
-                    hideSpinner();
+    
+                async function loadProgress(uid) {
+                    showSpinner();
+                    try {
+                        const querySnapshot = await getDocs(query(collection(db, 'progressBars'), where('uid', '==', uid)));
+                        return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                    } catch (e) {
+                        console.error('Error loading progress: ', e);
+                        return null;
+                    } finally {
+                        hideSpinner();
+                    }
                 }
-            }
-
-            function updateProgressBars(progressData) {
-                const progressBarsContainer = document.querySelector('.progress-bars-container');
-                const noProgressText = document.getElementById('no-progress-text');
-            
-                // Clear any existing progress bars
-                progressBarsContainer.innerHTML = '';
-            
-                if (progressData.length > 0) {
-                    progressData.forEach(value => {
-                        // Pass the correct ID to createProgressBar
-                        createProgressBar(value.title, value.id, value.percentage);
-                    });
-            
-                    progressBarsContainer.style.display = 'block';
-                    noProgressText.style.display = 'none';
-                } else {
-                    progressBarsContainer.style.display = 'none';
-                    noProgressText.style.display = 'block';
+    
+                function updateProgressBars(progressData) {
+                    const progressBarsContainer = document.querySelector('.progress-bars-container');
+                    const noProgressText = document.getElementById('no-progress-text');
+                
+                    progressBarsContainer.innerHTML = '';
+                
+                    if (progressData.length > 0) {
+                        progressData.forEach(value => {
+                            createProgressBar(value.title, value.id, value.percentage);
+                        });
+                
+                        progressBarsContainer.style.display = 'block';
+                        noProgressText.style.display = 'none';
+                    } else {
+                        progressBarsContainer.style.display = 'none';
+                        noProgressText.style.display = 'block';
+                    }
                 }
-            }
-            
-            async function updateProgressBar(userId, progressData) {
-                try {
-                    console.log(`Attempting to update progress bar with ID: ${progressData.id}`); // Log the ID here
-                    const progressBarRef = doc(db, 'progressBars', progressData.id);
-                    await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
-                    console.log(`Progress bar ${progressData.id} updated successfully`);
-                } catch (error) {
-                    console.error('Error updating progress bar:', error);
+                
+                async function updateProgressBar(userId, progressData) {
+                    try {
+                        console.log(`Attempting to update progress bar with ID: ${progressData.id}`);
+                        const progressBarRef = doc(db, 'progressBars', progressData.id);
+                        await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
+                        console.log(`Progress bar ${progressData.id} updated successfully`);
+                    } catch (error) {
+                        console.error('Error updating progress bar:', error);
+                    }
                 }
-            }
-
-        }).catch(error => {
-            console.error('Error setting persistence: ', error);
-        });
-    }
-}).catch(error => {
-    console.error('Error fetching Firebase config: ', error);
-});
+    
+            }).catch(error => {
+                console.error('Error setting persistence: ', error);
+            });
+        }
+    }).catch(error => {
+        console.error('Error fetching Firebase config: ', error);
+    });
