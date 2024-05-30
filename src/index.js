@@ -89,12 +89,13 @@ getConfig().then(firebaseConfig => {
                 });
             });
 
-            onAuthStateChanged(auth, user => {
+            onAuthStateChanged(auth, async user => {
                 showSpinner();
                 if (user) {
+                    console.log('User is signed in:', user);
                     sessionStorage.setItem('user', JSON.stringify(user));
-
-                    loadProgress(user.uid).then(progressData => {
+                    try {
+                        const progressData = await loadProgress(user.uid);
                         if (progressData) {
                             console.log(progressData);
                             updateProgressBars(progressData);
@@ -102,9 +103,9 @@ getConfig().then(firebaseConfig => {
                         } else {
                             updateProgressBars([]);
                         }
-                    }).finally(() => {
+                    } finally {
                         hideSpinner();
-                    });
+                    }
                 } else {
                     sessionStorage.removeItem('user');
                     console.log('No user is signed in');
@@ -231,6 +232,7 @@ getConfig().then(firebaseConfig => {
             function generateId() {
                 return Math.random().toString(36).substr(2, 9);
             }
+
             async function deleteProgressBar(userId, progressBarId) {
                 try {
                     console.log('Attempting to delete progress bar:');
@@ -240,27 +242,25 @@ getConfig().then(firebaseConfig => {
                     const progressBarRef = doc(db, 'progressBars', progressBarId);
                     console.log('Document Reference:', progressBarRef.path);
             
-                    // Check if the user is authenticated
-                    const user = auth.currentUser;
-                    if (!user) {
-                        console.error('User is not authenticated.');
-                        return false; // Indicate deletion failure
-                    }
-            
                     // Check if the document exists before deleting
                     const progressBarDoc = await getDoc(progressBarRef);
                     if (progressBarDoc.exists()) {
-                        if (progressBarDoc.data().uid !== user.uid) {
-                            console.error('User does not own this document.');
-                            return false; // Indicate deletion failure
+                        console.log('Progress bar document exists. Checking permissions.');
+            
+                        // Check if the document's UID matches the current user's UID
+                        const docData = progressBarDoc.data();
+                        if (docData.uid === userId) {
+                            console.log('User has permission to delete this progress bar. Proceeding with deletion.');
+                            await deleteDoc(progressBarRef);
+                            console.log('Progress bar deleted successfully');
+                            return true; // Indicate successful deletion
+                        } else {
+                            console.warn('User does not have permission to delete this progress bar.');
+                            return false; // Indicate deletion failure due to permission
                         }
-                        console.log('Progress bar document exists and user owns it. Proceeding with deletion.');
-                        await deleteDoc(progressBarRef);
-                        console.log('Progress bar deleted successfully');
-                        return true; // Indicate successful deletion
                     } else {
                         console.warn('Progress bar document does not exist. Cannot delete.');
-                        return false; // Indicate deletion failure
+                        return false; // Indicate deletion failure due to non-existent document
                     }
                 } catch (error) {
                     console.error('Error deleting progress bar:', error);
