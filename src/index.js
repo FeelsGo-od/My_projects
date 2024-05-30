@@ -116,14 +116,12 @@ getConfig().then(firebaseConfig => {
             
             let progressBarsArray = [];
             async function createProgressBar(title, id, percentage = 50) {
-                // Check if progress bar with provided ID already exists
-                if (document.getElementById(id)) {
-                    return; // If it exists, exit function to prevent duplication
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('User is not authenticated');
                 }
             
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
-            
-                // Generate HTML for the new progress bar
                 const progressBarHTML = `
                     <div class="progress-bar-container" id="${id}">
                         <h3 class="progress-title">${title}</h3>
@@ -137,20 +135,15 @@ getConfig().then(firebaseConfig => {
                         </div>
                     </div>
                 `;
-            
-                // Append the new progress bar to the container
                 progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHTML);
             
-                // Show the newly created progress bar
                 const newProgressBar = progressBarsContainer.lastElementChild;
                 newProgressBar.style.display = 'block';
-
-                // Add event listener to the input element of the new progress bar
+            
                 const progressBarInput = newProgressBar.querySelector('.progress-bar');
                 progressBarInput.addEventListener('input', async function() {
                     const percentage = this.value;
                     const progressBarId = this.parentNode.parentNode.id;
-                    const user = auth.currentUser;
                     if (user) {
                         const progressData = {
                             id: progressBarId,
@@ -158,43 +151,14 @@ getConfig().then(firebaseConfig => {
                         };
                         await updateProgressBar(user.uid, progressData);
                     }
-                    // Update the displayed percentage
                     const percentageDisplay = this.parentNode.querySelector('span');
                     if (percentageDisplay) {
                         percentageDisplay.textContent = `${percentage}%`;
                     }
                 });
-
-                // document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
-                //     if (event.target.classList.contains('delete-progress-bar-btn')) {
-                //         const deleteButton = event.target;
-                //         const progressBarContainer = deleteButton.closest('.progress-bar-container');
-                //         const progressBarId = progressBarContainer.id;
-                //         const user = auth.currentUser; // Retrieve the user
-                
-                //         if (user) {
-                //             // Call a function to delete the progress bar from the database
-                //             await deleteProgressBar(user.uid, progressBarId);
-                //             // Remove the progress bar from the UI
-                //             progressBarContainer.remove();
-                //         }
-                //     }
-                // });
             
-                // // Add event listener to the delete button
-                // const deleteButton = newProgressBar.querySelector('.delete-progress-bar-btn');
-                // deleteButton.addEventListener('click', async () => {
-                //     const user = auth.currentUser; // Retrieve the user
-                //     if (user) {
-                //         // Call a function to delete the progress bar from the database
-                //         deleteProgressBar(user.uid, id);
-                //         // Remove the progress bar from the UI
-                //         newProgressBar.remove();
-                //     }
-                // });
-            
-                // Push the progress bar object to the array
-                progressBarsArray.push({ title, id, percentage });
+                progressBarsArray.push({ title, id, percentage, uid: user.uid });
+                await saveAllProgressBars();
             }
 
             document.querySelector('.progress-bars-container').addEventListener('click', async (event) => {
@@ -318,7 +282,6 @@ getConfig().then(firebaseConfig => {
                 const progressBarsContainer = document.querySelector('.progress-bars-container');
                 const noProgressText = document.getElementById('no-progress-text');
             
-                // Clear any existing progress bars
                 progressBarsContainer.innerHTML = '';
             
                 if (progressData.length > 0) {
@@ -326,11 +289,9 @@ getConfig().then(firebaseConfig => {
                         createProgressBar(value.title, value.id, value.percentage);
                     });
             
-                    // Show progress bars container and hide placeholder text
                     progressBarsContainer.style.display = 'block';
                     noProgressText.style.display = 'none';
                 } else {
-                    // Hide progress bars container and show placeholder text
                     progressBarsContainer.style.display = 'none';
                     noProgressText.style.display = 'block';
                 }
@@ -340,6 +301,7 @@ getConfig().then(firebaseConfig => {
                 try {
                     const progressBarRef = doc(db, 'progressBars', progressData.id);
                     await setDoc(progressBarRef, { percentage: progressData.percentage }, { merge: true });
+                    console.log(`Progress bar ${progressData.id} updated successfully`);
                 } catch (error) {
                     console.error('Error updating progress bar:', error);
                 }
