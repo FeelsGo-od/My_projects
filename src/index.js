@@ -198,36 +198,36 @@ getConfig().then(firebaseConfig => {
                     }
                 }
     
-                // async function saveAllProgressBars() {
-                //     if (auth.currentUser && progressBarsArray.length > 0) {
-                //         await Promise.all(progressBarsArray.map(async bar => {
-                //             await saveProgressBar(auth.currentUser.uid, bar);
-                //         }));
-                //         progressBarsArray = [];
-                //     }
-                // }
+                async function saveAllProgressBars() {
+                    if (auth.currentUser && progressBarsArray.length > 0) {
+                        await Promise.all(progressBarsArray.map(async bar => {
+                            await saveProgressBar(auth.currentUser.uid, bar);
+                        }));
+                        progressBarsArray = [];
+                    }
+                }
     
-                // async function saveProgress(uid, progressBars) {
-                //     try {
-                //         const progressBarsCollectionRef = collection(db, 'progressBars');
-                //         const progressBarsQuery = query(progressBarsCollectionRef, where('uid', '==', uid));
-                //         const progressBarsSnapshot = await getDocs(progressBarsQuery);
-                //         progressBarsSnapshot.forEach(async doc => {
-                //             await deleteDoc(doc.ref);
-                //         });
+                async function saveProgress(uid, progressBars) {
+                    try {
+                        const progressBarsCollectionRef = collection(db, 'progressBars');
+                        const progressBarsQuery = query(progressBarsCollectionRef, where('uid', '==', uid));
+                        const progressBarsSnapshot = await getDocs(progressBarsQuery);
+                        progressBarsSnapshot.forEach(async doc => {
+                            await deleteDoc(doc.ref);
+                        });
                 
-                //         await Promise.all(progressBars.map(async bar => {
-                //             const progressBarRef = doc(progressBarsCollectionRef, bar.id);
-                //             await setDoc(progressBarRef, {
-                //                 uid: uid,
-                //                 title: bar.title,
-                //                 percentage: bar.percentage
-                //             });
-                //         }));
-                //     } catch (e) {
-                //         console.error('Error saving progress:', e);
-                //     }
-                // }
+                        await Promise.all(progressBars.map(async bar => {
+                            const progressBarRef = doc(progressBarsCollectionRef, bar.id);
+                            await setDoc(progressBarRef, {
+                                uid: uid,
+                                title: bar.title,
+                                percentage: bar.percentage
+                            });
+                        }));
+                    } catch (e) {
+                        console.error('Error saving progress:', e);
+                    }
+                }
     
                 async function loadProgress(uid) {
                     showSpinner();
