@@ -59,6 +59,16 @@ getConfig().then(firebaseConfig => {
         const db = getFirestore(app);
 
         auth.setPersistence(browserLocalPersistence).then(() => {
+            async function clearCache() {
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                    }
+                    console.log('All caches cleared');
+                }
+            }
+            
             document.getElementById('login-btn').addEventListener('click', async () => {
                 await clearCache();
                 showSpinner();
@@ -78,16 +88,6 @@ getConfig().then(firebaseConfig => {
                 });
             });
 
-            async function clearCache() {
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    for (const cacheName of cacheNames) {
-                        await caches.delete(cacheName);
-                    }
-                    console.log('All caches cleared');
-                }
-            }
-
             document.getElementById('logout-btn').addEventListener('click', async () => {
                 await clearCache();
                 showSpinner();
@@ -99,31 +99,6 @@ getConfig().then(firebaseConfig => {
                 }).finally(() => {
                     hideSpinner();
                 });
-            });
-
-            onAuthStateChanged(auth, async user => {
-                showSpinner();
-                if (user) {
-                    console.log('User is signed in:', user);
-                    sessionStorage.setItem('user', JSON.stringify(user));
-                    try {
-                        const progressData = await loadProgress(user.uid);
-                        if (progressData) {
-                            console.log(progressData);
-                            updateProgressBars(progressData);
-                            showProgressBars();
-                        } else {
-                            updateProgressBars([]);
-                        }
-                    } finally {
-                        hideSpinner();
-                    }
-                } else {
-                    sessionStorage.removeItem('user');
-                    console.log('No user is signed in');
-                    hideProgressBars();
-                    hideSpinner();            
-                }
             });
             
             let progressBarsArray = [];
@@ -170,7 +145,6 @@ getConfig().then(firebaseConfig => {
                     }
                 });
             
-                progressBarsArray.push({ title, id, percentage, uid: user.uid });
                 await saveProgressBar(user.uid, { title, id, percentage, uid: user.uid });
             }
 
@@ -219,27 +193,12 @@ getConfig().then(firebaseConfig => {
     
                 async function deleteProgressBar(userId, progressBarId) {
                     try {
-                        console.log('Attempting to delete progress bar:');
-                        console.log('User ID:', userId);
-                        console.log('Progress Bar ID:', progressBarId);
-                
-                        const progressBarRef = doc(db, 'progressBars', progressBarId);
-                        console.log('Document Reference:', progressBarRef.path);
-                
+                        const progressBarRef = doc(db, 'progressBars', progressBarId);                
                         const progressBarDoc = await getDoc(progressBarRef);
-                        if (progressBarDoc.exists()) {
-                            console.log('Progress bar document exists. Checking permissions.');
-                
-                            const docData = progressBarDoc.data();
-                            if (docData.uid === userId) {
-                                console.log('User has permission to delete this progress bar. Proceeding with deletion.');
-                                await deleteDoc(progressBarRef);
-                                console.log('Progress bar deleted successfully');
-                                return true;
-                            } else {
-                                console.warn('User does not have permission to delete this progress bar.');
-                                return false;
-                            }
+                        if (progressBarDoc.exists() && progressBarDoc.data().uid === userId) {
+                            await deleteDoc(progressBarRef);
+                            console.log('Progress bar deleted successfully');
+                            return true;
                         } else {
                             console.warn('Progress bar document does not exist. Cannot delete.');
                             return false;
@@ -288,7 +247,7 @@ getConfig().then(firebaseConfig => {
                         return querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                     } catch (e) {
                         console.error('Error loading progress: ', e);
-                        return null;
+                        return [];
                     } finally {
                         hideSpinner();
                     }
@@ -301,8 +260,8 @@ getConfig().then(firebaseConfig => {
                     progressBarsContainer.innerHTML = '';
                 
                     if (progressData.length > 0) {
-                        progressData.forEach(value => {
-                            createProgressBar(value.title, value.id, value.percentage);
+                        progressData.forEach(async value => {
+                            await createProgressBar(value.title, value.id, value.percentage);
                         });
                 
                         progressBarsContainer.style.display = 'block';
@@ -312,6 +271,26 @@ getConfig().then(firebaseConfig => {
                         noProgressText.style.display = 'block';
                     }
                 }
+
+                onAuthStateChanged(auth, async user => {
+                    showSpinner();
+                    if (user) {
+                        console.log('User is signed in:', user);
+                        sessionStorage.setItem('user', JSON.stringify(user));
+                        try {
+                            const progressData = await loadProgress(user.uid);
+                            updateProgressBars(progressData);
+                            showProgressBars();
+                        } finally {
+                            hideSpinner();
+                        }
+                    } else {
+                        sessionStorage.removeItem('user');
+                        console.log('No user is signed in');
+                        hideProgressBars();
+                        hideSpinner();            
+                    }
+                });
                 
                 async function updateProgressBar(userId, progressData) {
                     try {

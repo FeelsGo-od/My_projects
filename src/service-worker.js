@@ -8,9 +8,8 @@ const URLS_TO_CACHE = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(URLS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(URLS_TO_CACHE))
   );
 });
 
@@ -20,11 +19,7 @@ self.addEventListener('fetch', event => {
   // Bypass the cache for Firestore API requests
   if (requestUrl.hostname === 'firestore.googleapis.com') {
     event.respondWith(
-      fetch(event.request).then(networkResponse => {
-        return networkResponse;
-      }).catch(() => {
-        return caches.match(event.request);
-      })
+      fetch(event.request).catch(() => caches.match(event.request))
     )
     return;
   }
@@ -47,7 +42,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (!cacheWhitelist.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
