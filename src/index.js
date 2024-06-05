@@ -59,7 +59,8 @@ getConfig().then(firebaseConfig => {
         const db = getFirestore(app);
 
         auth.setPersistence(browserLocalPersistence).then(() => {
-            document.getElementById('login-btn').addEventListener('click', () => {
+            document.getElementById('login-btn').addEventListener('click', async () => {
+                await clearCache();
                 showSpinner();
                 signInWithPopup(auth, provider).then(result => {
                     const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -77,7 +78,18 @@ getConfig().then(firebaseConfig => {
                 });
             });
 
-            document.getElementById('logout-btn').addEventListener('click', () => {
+            async function clearCache() {
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                    }
+                    console.log('All caches cleared');
+                }
+            }
+
+            document.getElementById('logout-btn').addEventListener('click', async () => {
+                await clearCache();
                 showSpinner();
                 signOut(auth).then(() => {
                     console.log('User signed out.');
