@@ -207,27 +207,12 @@ getConfig().then(firebaseConfig => {
     
                 async function deleteProgressBar(userId, progressBarId) {
                     try {
-                        console.log('Attempting to delete progress bar:');
-                        console.log('User ID:', userId);
-                        console.log('Progress Bar ID:', progressBarId);
-                
-                        const progressBarRef = doc(db, 'progressBars', progressBarId);
-                        console.log('Document Reference:', progressBarRef.path);
-                
+                        const progressBarRef = doc(db, 'progressBars', progressBarId);                
                         const progressBarDoc = await getDoc(progressBarRef);
-                        if (progressBarDoc.exists()) {
-                            console.log('Progress bar document exists. Checking permissions.');
-                
-                            const docData = progressBarDoc.data();
-                            if (docData.uid === userId) {
-                                console.log('User has permission to delete this progress bar. Proceeding with deletion.');
-                                await deleteDoc(progressBarRef);
-                                console.log('Progress bar deleted successfully');
-                                return true;
-                            } else {
-                                console.warn('User does not have permission to delete this progress bar.');
-                                return false;
-                            }
+                        if (progressBarDoc.exists() && progressBarDoc.data().uid === userId) {
+                            await deleteDoc(progressBarRef);
+                            console.log('Progress bar deleted successfully');
+                            return true;
                         } else {
                             console.warn('Progress bar document does not exist. Cannot delete.');
                             return false;
