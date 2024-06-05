@@ -1,4 +1,4 @@
-const CACHE_NAME = 'progress-app-cache-v2';
+const CACHE_NAME = 'progress-app-cache-v3';
 const URLS_TO_CACHE = [
   '../index.html',
   '../styles.css',
