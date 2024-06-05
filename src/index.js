@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+import { getFirestore, onSnapshot, doc, setDoc, getDoc, collection, addDoc, getDocs, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-check.js";
 
 if ('serviceWorker' in navigator) {
@@ -89,9 +89,21 @@ getConfig().then(firebaseConfig => {
                 });
             });
 
+            function listenForProgressUpdates(uid) {
+                const q = query(collection(db, 'progressBars'), where('uid', '==', uid));
+                onSnapshot(q, (querySnapshot) => {
+                    const progressData = [];
+                    querySnapshot.forEach((doc) => {
+                        progressData.push({ ...doc.data(), id: doc.id });
+                    });
+                    updateProgressBars(progressData);
+                });
+            }
+
             onAuthStateChanged(auth, async user => {
                 showSpinner();
                 if (user) {
+                    listenForProgressUpdates(user.uid);
                     console.log('User is signed in:', user);
                     sessionStorage.setItem('user', JSON.stringify(user));
                     try {
